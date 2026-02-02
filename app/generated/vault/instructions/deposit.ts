@@ -34,7 +34,7 @@ import {
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
-import { VAULT_PROGRAM_ADDRESS } from "../programs";
+import { dexter_PROGRAM_ADDRESS } from "../programs";
 import {
   expectAddress,
   getAccountMetaFactory,
@@ -50,9 +50,9 @@ export function getDepositDiscriminatorBytes() {
 }
 
 export type DepositInstruction<
-  TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
+  TProgram extends string = typeof dexter_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
-  TAccountVault extends string | AccountMeta<string> = string,
+  TAccountdexter extends string | AccountMeta<string> = string,
   TAccountSystemProgram extends string | AccountMeta<string> =
     "11111111111111111111111111111111",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -64,9 +64,9 @@ export type DepositInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
-      TAccountVault extends string
-        ? WritableAccount<TAccountVault>
-        : TAccountVault,
+      TAccountdexter extends string
+        ? WritableAccount<TAccountdexter>
+        : TAccountdexter,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -110,24 +110,24 @@ export function getDepositInstructionDataCodec(): FixedSizeCodec<
 
 export type DepositAsyncInput<
   TAccountSigner extends string = string,
-  TAccountVault extends string = string,
+  TAccountdexter extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  vault?: Address<TAccountVault>;
+  dexter?: Address<TAccountdexter>;
   systemProgram?: Address<TAccountSystemProgram>;
   amount: DepositInstructionDataArgs["amount"];
 };
 
 export async function getDepositInstructionAsync<
   TAccountSigner extends string,
-  TAccountVault extends string,
+  TAccountdexter extends string,
   TAccountSystemProgram extends string,
-  TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
+  TProgramAddress extends Address = typeof dexter_PROGRAM_ADDRESS,
 >(
   input: DepositAsyncInput<
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress },
@@ -135,17 +135,17 @@ export async function getDepositInstructionAsync<
   DepositInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >
 > {
   // Program address.
-  const programAddress = config?.programAddress ?? VAULT_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? dexter_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    vault: { value: input.vault ?? null, isWritable: true },
+    dexter: { value: input.dexter ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -157,8 +157,8 @@ export async function getDepositInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.vault.value) {
-    accounts.vault.value = await getProgramDerivedAddress({
+  if (!accounts.dexter.value) {
+    accounts.dexter.value = await getProgramDerivedAddress({
       programAddress,
       seeds: [
         getBytesEncoder().encode(new Uint8Array([118, 97, 117, 108, 116])),
@@ -175,7 +175,7 @@ export async function getDepositInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.vault),
+      getAccountMeta(accounts.dexter),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getDepositInstructionDataEncoder().encode(
@@ -185,43 +185,43 @@ export async function getDepositInstructionAsync<
   } as DepositInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >);
 }
 
 export type DepositInput<
   TAccountSigner extends string = string,
-  TAccountVault extends string = string,
+  TAccountdexter extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  vault: Address<TAccountVault>;
+  dexter: Address<TAccountdexter>;
   systemProgram?: Address<TAccountSystemProgram>;
   amount: DepositInstructionDataArgs["amount"];
 };
 
 export function getDepositInstruction<
   TAccountSigner extends string,
-  TAccountVault extends string,
+  TAccountdexter extends string,
   TAccountSystemProgram extends string,
-  TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
+  TProgramAddress extends Address = typeof dexter_PROGRAM_ADDRESS,
 >(
-  input: DepositInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
+  input: DepositInput<TAccountSigner, TAccountdexter, TAccountSystemProgram>,
   config?: { programAddress?: TProgramAddress },
 ): DepositInstruction<
   TProgramAddress,
   TAccountSigner,
-  TAccountVault,
+  TAccountdexter,
   TAccountSystemProgram
 > {
   // Program address.
-  const programAddress = config?.programAddress ?? VAULT_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? dexter_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    vault: { value: input.vault ?? null, isWritable: true },
+    dexter: { value: input.dexter ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -242,7 +242,7 @@ export function getDepositInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.vault),
+      getAccountMeta(accounts.dexter),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getDepositInstructionDataEncoder().encode(
@@ -252,19 +252,19 @@ export function getDepositInstruction<
   } as DepositInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >);
 }
 
 export type ParsedDepositInstruction<
-  TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
+  TProgram extends string = typeof dexter_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    vault: TAccountMetas[1];
+    dexter: TAccountMetas[1];
     systemProgram: TAccountMetas[2];
   };
   data: DepositInstructionData;
@@ -292,7 +292,7 @@ export function parseDepositInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
-      vault: getNextAccount(),
+      dexter: getNextAccount(),
       systemProgram: getNextAccount(),
     },
     data: getDepositInstructionDataDecoder().decode(instruction.data),

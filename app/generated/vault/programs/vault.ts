@@ -23,17 +23,17 @@ import {
   type ParsedWithdrawInstruction,
 } from "../instructions";
 
-export const VAULT_PROGRAM_ADDRESS =
+export const dexter_PROGRAM_ADDRESS =
   "3WrhjPN2LHeTbHJKgtsBoWzcmDdpvGyX5rMDUjMoMJRW" as Address<"3WrhjPN2LHeTbHJKgtsBoWzcmDdpvGyX5rMDUjMoMJRW">;
 
-export enum VaultInstruction {
+export enum dexterInstruction {
   Deposit,
   Withdraw,
 }
 
-export function identifyVaultInstruction(
+export function identifydexterInstruction(
   instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array,
-): VaultInstruction {
+): dexterInstruction {
   const data = "data" in instruction ? instruction.data : instruction;
   if (
     containsBytes(
@@ -44,7 +44,7 @@ export function identifyVaultInstruction(
       0,
     )
   ) {
-    return VaultInstruction.Deposit;
+    return dexterInstruction.Deposit;
   }
   if (
     containsBytes(
@@ -55,39 +55,39 @@ export function identifyVaultInstruction(
       0,
     )
   ) {
-    return VaultInstruction.Withdraw;
+    return dexterInstruction.Withdraw;
   }
   throw new Error(
-    "The provided instruction could not be identified as a vault instruction.",
+    "The provided instruction could not be identified as a dexter instruction.",
   );
 }
 
-export type ParsedVaultInstruction<
+export type ParseddexterInstruction<
   TProgram extends string = "3WrhjPN2LHeTbHJKgtsBoWzcmDdpvGyX5rMDUjMoMJRW",
 > =
   | ({
-      instructionType: VaultInstruction.Deposit;
+      instructionType: dexterInstruction.Deposit;
     } & ParsedDepositInstruction<TProgram>)
   | ({
-      instructionType: VaultInstruction.Withdraw;
+      instructionType: dexterInstruction.Withdraw;
     } & ParsedWithdrawInstruction<TProgram>);
 
-export function parseVaultInstruction<TProgram extends string>(
+export function parsedexterInstruction<TProgram extends string>(
   instruction: Instruction<TProgram> & InstructionWithData<ReadonlyUint8Array>,
-): ParsedVaultInstruction<TProgram> {
-  const instructionType = identifyVaultInstruction(instruction);
+): ParseddexterInstruction<TProgram> {
+  const instructionType = identifydexterInstruction(instruction);
   switch (instructionType) {
-    case VaultInstruction.Deposit: {
+    case dexterInstruction.Deposit: {
       assertIsInstructionWithAccounts(instruction);
       return {
-        instructionType: VaultInstruction.Deposit,
+        instructionType: dexterInstruction.Deposit,
         ...parseDepositInstruction(instruction),
       };
     }
-    case VaultInstruction.Withdraw: {
+    case dexterInstruction.Withdraw: {
       assertIsInstructionWithAccounts(instruction);
       return {
-        instructionType: VaultInstruction.Withdraw,
+        instructionType: dexterInstruction.Withdraw,
         ...parseWithdrawInstruction(instruction),
       };
     }

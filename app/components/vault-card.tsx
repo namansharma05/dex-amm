@@ -15,51 +15,51 @@ import {
 import {
   getDepositInstructionDataEncoder,
   getWithdrawInstructionDataEncoder,
-  VAULT_PROGRAM_ADDRESS,
-} from "../generated/vault";
+  dexter_PROGRAM_ADDRESS,
+} from "../generated/dexter";
 
 const LAMPORTS_PER_SOL = 1_000_000_000n;
 const SYSTEM_PROGRAM_ADDRESS = "11111111111111111111111111111111" as Address;
 
-export function VaultCard() {
+export function dexterCard() {
   const { wallet, status } = useWalletConnection();
   const { send, isSending } = useSendTransaction();
 
   const [amount, setAmount] = useState("");
-  const [vaultAddress, setVaultAddress] = useState<Address | null>(null);
+  const [dexterAddress, setdexterAddress] = useState<Address | null>(null);
   const [txStatus, setTxStatus] = useState<string | null>(null);
 
   const walletAddress = wallet?.account.address;
 
-  // Derive vault PDA when wallet connects
+  // Derive dexter PDA when wallet connects
   useEffect(() => {
-    async function deriveVault() {
+    async function derivedexter() {
       if (!walletAddress) {
-        setVaultAddress(null);
+        setdexterAddress(null);
         return;
       }
 
       const [pda] = await getProgramDerivedAddress({
-        programAddress: VAULT_PROGRAM_ADDRESS,
+        programAddress: dexter_PROGRAM_ADDRESS,
         seeds: [
-          getBytesEncoder().encode(new Uint8Array([118, 97, 117, 108, 116])), // "vault"
+          getBytesEncoder().encode(new Uint8Array([118, 97, 117, 108, 116])), // "dexter"
           getAddressEncoder().encode(walletAddress),
         ],
       });
 
-      setVaultAddress(pda);
+      setdexterAddress(pda);
     }
 
-    deriveVault();
+    derivedexter();
   }, [walletAddress]);
 
-  // Get vault balance
-  const vaultBalance = useBalance(vaultAddress ?? undefined);
-  const vaultLamports = vaultBalance?.lamports ?? 0n;
-  const vaultSol = Number(vaultLamports) / Number(LAMPORTS_PER_SOL);
+  // Get dexter balance
+  const dexterBalance = useBalance(dexterAddress ?? undefined);
+  const dexterLamports = dexterBalance?.lamports ?? 0n;
+  const dexterSol = Number(dexterLamports) / Number(LAMPORTS_PER_SOL);
 
   const handleDeposit = useCallback(async () => {
-    if (!walletAddress || !vaultAddress || !amount) return;
+    if (!walletAddress || !dexterAddress || !amount) return;
 
     try {
       setTxStatus("Building transaction...");
@@ -70,10 +70,10 @@ export function VaultCard() {
 
       // Manually construct the instruction
       const instruction = {
-        programAddress: VAULT_PROGRAM_ADDRESS,
+        programAddress: dexter_PROGRAM_ADDRESS,
         accounts: [
           { address: walletAddress, role: 3 }, // WritableSigner (3 = writable + signer)
-          { address: vaultAddress, role: 1 }, // Writable (1 = writable)
+          { address: dexterAddress, role: 1 }, // Writable (1 = writable)
           { address: SYSTEM_PROGRAM_ADDRESS, role: 0 }, // Readonly (0 = readonly)
         ],
         data: getDepositInstructionDataEncoder().encode({
@@ -95,20 +95,20 @@ export function VaultCard() {
         `Error: ${err instanceof Error ? err.message : "Unknown error"}`
       );
     }
-  }, [walletAddress, vaultAddress, amount, send]);
+  }, [walletAddress, dexterAddress, amount, send]);
 
   const handleWithdraw = useCallback(async () => {
-    if (!walletAddress || !vaultAddress) return;
+    if (!walletAddress || !dexterAddress) return;
 
     try {
       setTxStatus("Building transaction...");
 
       // Manually construct the instruction
       const instruction = {
-        programAddress: VAULT_PROGRAM_ADDRESS,
+        programAddress: dexter_PROGRAM_ADDRESS,
         accounts: [
           { address: walletAddress, role: 3 }, // WritableSigner
-          { address: vaultAddress, role: 1 }, // Writable
+          { address: dexterAddress, role: 1 }, // Writable
           { address: SYSTEM_PROGRAM_ADDRESS, role: 0 }, // Readonly
         ],
         data: getWithdrawInstructionDataEncoder().encode({}),
@@ -127,15 +127,15 @@ export function VaultCard() {
         `Error: ${err instanceof Error ? err.message : "Unknown error"}`
       );
     }
-  }, [walletAddress, vaultAddress, send]);
+  }, [walletAddress, dexterAddress, send]);
 
   if (status !== "connected") {
     return (
       <section className="w-full max-w-3xl space-y-4 rounded-2xl border border-border-low bg-card p-6 shadow-[0_20px_80px_-50px_rgba(0,0,0,0.35)]">
         <div className="space-y-1">
-          <p className="text-lg font-semibold">SOL Vault</p>
+          <p className="text-lg font-semibold">SOL dexter</p>
           <p className="text-sm text-muted">
-            Connect your wallet to interact with the vault program.
+            Connect your wallet to interact with the dexter program.
           </p>
         </div>
         <div className="rounded-lg bg-cream/50 p-4 text-center text-sm text-muted">
@@ -149,28 +149,28 @@ export function VaultCard() {
     <section className="w-full max-w-3xl space-y-4 rounded-2xl border border-border-low bg-card p-6 shadow-[0_20px_80px_-50px_rgba(0,0,0,0.35)]">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <p className="text-lg font-semibold">SOL Vault</p>
+          <p className="text-lg font-semibold">SOL dexter</p>
           <p className="text-sm text-muted">
-            Deposit SOL into your personal vault PDA and withdraw anytime.
+            Deposit SOL into your personal dexter PDA and withdraw anytime.
           </p>
         </div>
         <span className="rounded-full bg-cream px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80">
-          {vaultLamports > 0n ? "Has funds" : "Empty"}
+          {dexterLamports > 0n ? "Has funds" : "Empty"}
         </span>
       </div>
 
-      {/* Vault Balance */}
+      {/* dexter Balance */}
       <div className="rounded-xl border border-border-low bg-cream/30 p-4">
         <p className="text-xs uppercase tracking-wide text-muted">
-          Vault Balance
+          dexter Balance
         </p>
         <p className="mt-1 text-3xl font-bold tabular-nums">
-          {vaultSol.toFixed(4)}{" "}
+          {dexterSol.toFixed(4)}{" "}
           <span className="text-lg font-normal text-muted">SOL</span>
         </p>
-        {vaultAddress && (
+        {dexterAddress && (
           <p className="mt-2 truncate font-mono text-xs text-muted">
-            {vaultAddress}
+            {dexterAddress}
           </p>
         )}
       </div>
@@ -194,16 +194,16 @@ export function VaultCard() {
               isSending ||
               !amount ||
               parseFloat(amount) <= 0 ||
-              vaultLamports > 0n
+              dexterLamports > 0n
             }
             className="rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isSending ? "Confirming..." : "Deposit"}
           </button>
         </div>
-        {vaultLamports > 0n && (
+        {dexterLamports > 0n && (
           <p className="text-xs text-muted">
-            Vault already has funds. Withdraw first before depositing again.
+            dexter already has funds. Withdraw first before depositing again.
           </p>
         )}
       </div>
@@ -211,7 +211,7 @@ export function VaultCard() {
       {/* Withdraw Button */}
       <button
         onClick={handleWithdraw}
-        disabled={isSending || vaultLamports === 0n}
+        disabled={isSending || dexterLamports === 0n}
         className="w-full rounded-lg border border-border-low bg-card px-4 py-2.5 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isSending ? "Confirming..." : "Withdraw All"}
@@ -227,7 +227,7 @@ export function VaultCard() {
       {/* Educational Footer */}
       <div className="border-t border-border-low pt-4 text-xs text-muted">
         <p className="mb-2">
-          This vault is an{" "}
+          This dexter is an{" "}
           <a
             href="https://www.anchor-lang.com/docs"
             target="_blank"
@@ -256,7 +256,7 @@ export function VaultCard() {
             Deploy Programs
           </a>
           <a
-            href="https://github.com/ZYJLiu/anchor-vault-template"
+            href="https://github.com/ZYJLiu/anchor-dexter-template"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 rounded-md bg-cream px-2 py-1 font-medium transition hover:bg-cream/70"

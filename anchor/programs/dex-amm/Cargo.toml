@@ -1,12 +1,12 @@
 [package]
-name = "vault"
+name = "dexter"
 version = "0.1.0"
-description = "A simple SOL vault program"
+description = "A simple SOL dexter program"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "vault"
+name = "dexter"
 
 [features]
 default = []

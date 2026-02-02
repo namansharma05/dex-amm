@@ -32,7 +32,7 @@ import {
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
-import { VAULT_PROGRAM_ADDRESS } from "../programs";
+import { dexter_PROGRAM_ADDRESS } from "../programs";
 import {
   expectAddress,
   getAccountMetaFactory,
@@ -48,9 +48,9 @@ export function getWithdrawDiscriminatorBytes() {
 }
 
 export type WithdrawInstruction<
-  TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
+  TProgram extends string = typeof dexter_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
-  TAccountVault extends string | AccountMeta<string> = string,
+  TAccountdexter extends string | AccountMeta<string> = string,
   TAccountSystemProgram extends string | AccountMeta<string> =
     "11111111111111111111111111111111",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
@@ -62,9 +62,9 @@ export type WithdrawInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
-      TAccountVault extends string
-        ? WritableAccount<TAccountVault>
-        : TAccountVault,
+      TAccountdexter extends string
+        ? WritableAccount<TAccountdexter>
+        : TAccountdexter,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -101,23 +101,23 @@ export function getWithdrawInstructionDataCodec(): FixedSizeCodec<
 
 export type WithdrawAsyncInput<
   TAccountSigner extends string = string,
-  TAccountVault extends string = string,
+  TAccountdexter extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  vault?: Address<TAccountVault>;
+  dexter?: Address<TAccountdexter>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
 export async function getWithdrawInstructionAsync<
   TAccountSigner extends string,
-  TAccountVault extends string,
+  TAccountdexter extends string,
   TAccountSystemProgram extends string,
-  TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
+  TProgramAddress extends Address = typeof dexter_PROGRAM_ADDRESS,
 >(
   input: WithdrawAsyncInput<
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress },
@@ -125,17 +125,17 @@ export async function getWithdrawInstructionAsync<
   WithdrawInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >
 > {
   // Program address.
-  const programAddress = config?.programAddress ?? VAULT_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? dexter_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    vault: { value: input.vault ?? null, isWritable: true },
+    dexter: { value: input.dexter ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -144,8 +144,8 @@ export async function getWithdrawInstructionAsync<
   >;
 
   // Resolve default values.
-  if (!accounts.vault.value) {
-    accounts.vault.value = await getProgramDerivedAddress({
+  if (!accounts.dexter.value) {
+    accounts.dexter.value = await getProgramDerivedAddress({
       programAddress,
       seeds: [
         getBytesEncoder().encode(new Uint8Array([118, 97, 117, 108, 116])),
@@ -162,7 +162,7 @@ export async function getWithdrawInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.vault),
+      getAccountMeta(accounts.dexter),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getWithdrawInstructionDataEncoder().encode({}),
@@ -170,42 +170,42 @@ export async function getWithdrawInstructionAsync<
   } as WithdrawInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >);
 }
 
 export type WithdrawInput<
   TAccountSigner extends string = string,
-  TAccountVault extends string = string,
+  TAccountdexter extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  vault: Address<TAccountVault>;
+  dexter: Address<TAccountdexter>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
 export function getWithdrawInstruction<
   TAccountSigner extends string,
-  TAccountVault extends string,
+  TAccountdexter extends string,
   TAccountSystemProgram extends string,
-  TProgramAddress extends Address = typeof VAULT_PROGRAM_ADDRESS,
+  TProgramAddress extends Address = typeof dexter_PROGRAM_ADDRESS,
 >(
-  input: WithdrawInput<TAccountSigner, TAccountVault, TAccountSystemProgram>,
+  input: WithdrawInput<TAccountSigner, TAccountdexter, TAccountSystemProgram>,
   config?: { programAddress?: TProgramAddress },
 ): WithdrawInstruction<
   TProgramAddress,
   TAccountSigner,
-  TAccountVault,
+  TAccountdexter,
   TAccountSystemProgram
 > {
   // Program address.
-  const programAddress = config?.programAddress ?? VAULT_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? dexter_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    vault: { value: input.vault ?? null, isWritable: true },
+    dexter: { value: input.dexter ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -223,7 +223,7 @@ export function getWithdrawInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.vault),
+      getAccountMeta(accounts.dexter),
       getAccountMeta(accounts.systemProgram),
     ],
     data: getWithdrawInstructionDataEncoder().encode({}),
@@ -231,19 +231,19 @@ export function getWithdrawInstruction<
   } as WithdrawInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountVault,
+    TAccountdexter,
     TAccountSystemProgram
   >);
 }
 
 export type ParsedWithdrawInstruction<
-  TProgram extends string = typeof VAULT_PROGRAM_ADDRESS,
+  TProgram extends string = typeof dexter_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    vault: TAccountMetas[1];
+    dexter: TAccountMetas[1];
     systemProgram: TAccountMetas[2];
   };
   data: WithdrawInstructionData;
@@ -271,7 +271,7 @@ export function parseWithdrawInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
-      vault: getNextAccount(),
+      dexter: getNextAccount(),
       systemProgram: getNextAccount(),
     },
     data: getWithdrawInstructionDataDecoder().decode(instruction.data),

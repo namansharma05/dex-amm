@@ -12,34 +12,34 @@ import {
   type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
   type SolanaError,
 } from "@solana/kit";
-import { VAULT_PROGRAM_ADDRESS } from "../programs";
+import { dexter_PROGRAM_ADDRESS } from "../programs";
 
-/** VaultAlreadyExists: Vault already exists */
-export const VAULT_ERROR__VAULT_ALREADY_EXISTS = 0x1770; // 6000
+/** dexterAlreadyExists: dexter already exists */
+export const dexter_ERROR__dexter_ALREADY_EXISTS = 0x1770; // 6000
 /** InvalidAmount: Invalid amount */
-export const VAULT_ERROR__INVALID_AMOUNT = 0x1771; // 6001
+export const dexter_ERROR__INVALID_AMOUNT = 0x1771; // 6001
 
-export type VaultError =
-  | typeof VAULT_ERROR__INVALID_AMOUNT
-  | typeof VAULT_ERROR__VAULT_ALREADY_EXISTS;
+export type dexterError =
+  | typeof dexter_ERROR__INVALID_AMOUNT
+  | typeof dexter_ERROR__dexter_ALREADY_EXISTS;
 
-let vaultErrorMessages: Record<VaultError, string> | undefined;
+let dexterErrorMessages: Record<dexterError, string> | undefined;
 if (process.env.NODE_ENV !== "production") {
-  vaultErrorMessages = {
-    [VAULT_ERROR__INVALID_AMOUNT]: `Invalid amount`,
-    [VAULT_ERROR__VAULT_ALREADY_EXISTS]: `Vault already exists`,
+  dexterErrorMessages = {
+    [dexter_ERROR__INVALID_AMOUNT]: `Invalid amount`,
+    [dexter_ERROR__dexter_ALREADY_EXISTS]: `dexter already exists`,
   };
 }
 
-export function getVaultErrorMessage(code: VaultError): string {
+export function getdexterErrorMessage(code: dexterError): string {
   if (process.env.NODE_ENV !== "production") {
-    return (vaultErrorMessages as Record<VaultError, string>)[code];
+    return (dexterErrorMessages as Record<dexterError, string>)[code];
   }
 
   return "Error message not available in production bundles.";
 }
 
-export function isVaultError<TProgramErrorCode extends VaultError>(
+export function isdexterError<TProgramErrorCode extends dexterError>(
   error: unknown,
   transactionMessage: {
     instructions: Record<number, { programAddress: Address }>;
@@ -50,7 +50,7 @@ export function isVaultError<TProgramErrorCode extends VaultError>(
   return isProgramError<TProgramErrorCode>(
     error,
     transactionMessage,
-    VAULT_PROGRAM_ADDRESS,
+    dexter_PROGRAM_ADDRESS,
     code,
   );
 }
