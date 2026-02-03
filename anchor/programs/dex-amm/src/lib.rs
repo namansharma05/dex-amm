@@ -1,5 +1,10 @@
+#![warn(dead_code, unused_variables)]
+#![allow(unexpected_cfgs)]
 use anchor_lang::prelude::*;
 
+mod blueprints;
+mod contexts;
+mod errors;
 #[cfg(test)]
 mod tests;
 
