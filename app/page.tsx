@@ -1,6 +1,6 @@
 "use client";
 import { useWalletConnection } from "@solana/react-hooks";
-import { dexterCard } from "./components/dexter-card";
+import { DexterCard } from "./components/vault-card";
 
 export default function Home() {
   const { connectors, connect, disconnect, wallet, status } =
@@ -153,7 +153,7 @@ export default function Home() {
         </section>
 
         {/* dexter Program Section */}
-        <dexterCard />
+        <DexterCard />
       </main>
     </div>
   );
