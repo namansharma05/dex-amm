@@ -1,5 +1,6 @@
 "use client";
 import { useWalletConnection } from "@solana/react-hooks";
+import DexterCard from "./components/dexterCard";
 
 export default function Home() {
   const { connectors, connect, disconnect, wallet, status } =
@@ -9,7 +10,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-bg1 text-foreground">
-      <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col gap-10 px-6 py-16">
+      <main className="relative z-10 mx-auto flex items-center justify-center min-h-screen max-w-4xl flex-col gap-10 px-6 py-16">
         <section className="w-full max-w-3xl space-y-4 rounded-2xl border border-border-low bg-card p-6 shadow-[0_20px_80px_-50px_rgba(0,0,0,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
@@ -64,6 +65,7 @@ export default function Home() {
             </button>
           </div>
         </section>
+        <DexterCard />
       </main>
     </div>
   );
