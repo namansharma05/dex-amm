@@ -12,7 +12,7 @@ pub struct Initialize<'info> {
         token::mint = mint_a,
         token::authority = sol_vault_account,
         token::token_program = token_program,
-        seeds = [b"sol_token", signer.key().as_ref()], // PDA is derived from "sol_token" + program's signer wallet address
+        seeds = [b"sol_token"], // PDA is derived from "sol_token"
         bump,
     )]
     pub sol_vault_account: InterfaceAccount<'info, TokenAccount>,
@@ -23,9 +23,8 @@ pub struct Initialize<'info> {
         token::mint = mint_b,
         token::authority = usdt_vault_account,
         token::token_program = token_program,
-        seeds = [b"usdt_token", signer.key().as_ref()],
+        seeds = [b"usdt_token"], // PDA is derived from "usdt_token"
         bump,
-
     )]
     pub usdt_vault_account: InterfaceAccount<'info, TokenAccount>,
 
