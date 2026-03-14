@@ -9,6 +9,28 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = signer,
+        mint::authority = mint_a,
+        mint::decimals = 8,
+        mint::freeze_authority = mint_a,
+        seeds = [b"mint_a"],
+        bump,
+    )]
+    pub mint_a: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        init,
+        payer = signer,
+        mint::authority = mint_b,
+        mint::decimals = 8,
+        mint::freeze_authority = mint_b,
+        seeds = [b"mint_b"],
+        bump,
+    )]
+    pub mint_b: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        init,
+        payer = signer,
         token::mint = mint_a,
         token::authority = sol_vault_account,
         token::token_program = token_program,
@@ -27,9 +49,6 @@ pub struct Initialize<'info> {
         bump,
     )]
     pub usdt_vault_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub mint_a: InterfaceAccount<'info, Mint>,
-    pub mint_b: InterfaceAccount<'info, Mint>,
 
     pub token_program: Interface<'info, TokenInterface>,
 

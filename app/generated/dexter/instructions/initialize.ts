@@ -10,7 +10,6 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
-  getAddressEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getProgramDerivedAddress,
@@ -33,11 +32,7 @@ import {
   type WritableSignerAccount,
 } from "@solana/kit";
 import { DEXTER_PROGRAM_ADDRESS } from "../programs";
-import {
-  expectAddress,
-  getAccountMetaFactory,
-  type ResolvedAccount,
-} from "../shared";
+import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const INITIALIZE_DISCRIMINATOR = new Uint8Array([
   175, 175, 109, 31, 13, 152, 155, 237,
@@ -50,10 +45,10 @@ export function getInitializeDiscriminatorBytes() {
 export type InitializeInstruction<
   TProgram extends string = typeof DEXTER_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
-  TAccountSolVaultAccount extends string | AccountMeta<string> = string,
-  TAccountUsdtVaultAccount extends string | AccountMeta<string> = string,
   TAccountMintA extends string | AccountMeta<string> = string,
   TAccountMintB extends string | AccountMeta<string> = string,
+  TAccountSolVaultAccount extends string | AccountMeta<string> = string,
+  TAccountUsdtVaultAccount extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> =
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   TAccountSystemProgram extends string | AccountMeta<string> =
@@ -67,18 +62,18 @@ export type InitializeInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
+      TAccountMintA extends string
+        ? WritableAccount<TAccountMintA>
+        : TAccountMintA,
+      TAccountMintB extends string
+        ? WritableAccount<TAccountMintB>
+        : TAccountMintB,
       TAccountSolVaultAccount extends string
         ? WritableAccount<TAccountSolVaultAccount>
         : TAccountSolVaultAccount,
       TAccountUsdtVaultAccount extends string
         ? WritableAccount<TAccountUsdtVaultAccount>
         : TAccountUsdtVaultAccount,
-      TAccountMintA extends string
-        ? ReadonlyAccount<TAccountMintA>
-        : TAccountMintA,
-      TAccountMintB extends string
-        ? ReadonlyAccount<TAccountMintB>
-        : TAccountMintB,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -118,38 +113,38 @@ export function getInitializeInstructionDataCodec(): FixedSizeCodec<
 
 export type InitializeAsyncInput<
   TAccountSigner extends string = string,
-  TAccountSolVaultAccount extends string = string,
-  TAccountUsdtVaultAccount extends string = string,
   TAccountMintA extends string = string,
   TAccountMintB extends string = string,
+  TAccountSolVaultAccount extends string = string,
+  TAccountUsdtVaultAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
+  mintA?: Address<TAccountMintA>;
+  mintB?: Address<TAccountMintB>;
   solVaultAccount?: Address<TAccountSolVaultAccount>;
   usdtVaultAccount?: Address<TAccountUsdtVaultAccount>;
-  mintA: Address<TAccountMintA>;
-  mintB: Address<TAccountMintB>;
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
 export async function getInitializeInstructionAsync<
   TAccountSigner extends string,
-  TAccountSolVaultAccount extends string,
-  TAccountUsdtVaultAccount extends string,
   TAccountMintA extends string,
   TAccountMintB extends string,
+  TAccountSolVaultAccount extends string,
+  TAccountUsdtVaultAccount extends string,
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof DEXTER_PROGRAM_ADDRESS,
 >(
   input: InitializeAsyncInput<
     TAccountSigner,
-    TAccountSolVaultAccount,
-    TAccountUsdtVaultAccount,
     TAccountMintA,
     TAccountMintB,
+    TAccountSolVaultAccount,
+    TAccountUsdtVaultAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
   >,
@@ -158,10 +153,10 @@ export async function getInitializeInstructionAsync<
   InitializeInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountSolVaultAccount,
-    TAccountUsdtVaultAccount,
     TAccountMintA,
     TAccountMintB,
+    TAccountSolVaultAccount,
+    TAccountUsdtVaultAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
   >
@@ -172,13 +167,13 @@ export async function getInitializeInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    mintA: { value: input.mintA ?? null, isWritable: true },
+    mintB: { value: input.mintB ?? null, isWritable: true },
     solVaultAccount: { value: input.solVaultAccount ?? null, isWritable: true },
     usdtVaultAccount: {
       value: input.usdtVaultAccount ?? null,
       isWritable: true,
     },
-    mintA: { value: input.mintA ?? null, isWritable: false },
-    mintB: { value: input.mintB ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -188,6 +183,22 @@ export async function getInitializeInstructionAsync<
   >;
 
   // Resolve default values.
+  if (!accounts.mintA.value) {
+    accounts.mintA.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(new Uint8Array([109, 105, 110, 116, 95, 97])),
+      ],
+    });
+  }
+  if (!accounts.mintB.value) {
+    accounts.mintB.value = await getProgramDerivedAddress({
+      programAddress,
+      seeds: [
+        getBytesEncoder().encode(new Uint8Array([109, 105, 110, 116, 95, 98])),
+      ],
+    });
+  }
   if (!accounts.solVaultAccount.value) {
     accounts.solVaultAccount.value = await getProgramDerivedAddress({
       programAddress,
@@ -195,7 +206,6 @@ export async function getInitializeInstructionAsync<
         getBytesEncoder().encode(
           new Uint8Array([115, 111, 108, 95, 116, 111, 107, 101, 110]),
         ),
-        getAddressEncoder().encode(expectAddress(accounts.signer.value)),
       ],
     });
   }
@@ -206,7 +216,6 @@ export async function getInitializeInstructionAsync<
         getBytesEncoder().encode(
           new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110]),
         ),
-        getAddressEncoder().encode(expectAddress(accounts.signer.value)),
       ],
     });
   }
@@ -223,10 +232,10 @@ export async function getInitializeInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.solVaultAccount),
-      getAccountMeta(accounts.usdtVaultAccount),
       getAccountMeta(accounts.mintA),
       getAccountMeta(accounts.mintB),
+      getAccountMeta(accounts.solVaultAccount),
+      getAccountMeta(accounts.usdtVaultAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
@@ -235,10 +244,10 @@ export async function getInitializeInstructionAsync<
   } as InitializeInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountSolVaultAccount,
-    TAccountUsdtVaultAccount,
     TAccountMintA,
     TAccountMintB,
+    TAccountSolVaultAccount,
+    TAccountUsdtVaultAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
   >);
@@ -246,38 +255,38 @@ export async function getInitializeInstructionAsync<
 
 export type InitializeInput<
   TAccountSigner extends string = string,
-  TAccountSolVaultAccount extends string = string,
-  TAccountUsdtVaultAccount extends string = string,
   TAccountMintA extends string = string,
   TAccountMintB extends string = string,
+  TAccountSolVaultAccount extends string = string,
+  TAccountUsdtVaultAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  solVaultAccount: Address<TAccountSolVaultAccount>;
-  usdtVaultAccount: Address<TAccountUsdtVaultAccount>;
   mintA: Address<TAccountMintA>;
   mintB: Address<TAccountMintB>;
+  solVaultAccount: Address<TAccountSolVaultAccount>;
+  usdtVaultAccount: Address<TAccountUsdtVaultAccount>;
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
 };
 
 export function getInitializeInstruction<
   TAccountSigner extends string,
-  TAccountSolVaultAccount extends string,
-  TAccountUsdtVaultAccount extends string,
   TAccountMintA extends string,
   TAccountMintB extends string,
+  TAccountSolVaultAccount extends string,
+  TAccountUsdtVaultAccount extends string,
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof DEXTER_PROGRAM_ADDRESS,
 >(
   input: InitializeInput<
     TAccountSigner,
-    TAccountSolVaultAccount,
-    TAccountUsdtVaultAccount,
     TAccountMintA,
     TAccountMintB,
+    TAccountSolVaultAccount,
+    TAccountUsdtVaultAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
   >,
@@ -285,10 +294,10 @@ export function getInitializeInstruction<
 ): InitializeInstruction<
   TProgramAddress,
   TAccountSigner,
-  TAccountSolVaultAccount,
-  TAccountUsdtVaultAccount,
   TAccountMintA,
   TAccountMintB,
+  TAccountSolVaultAccount,
+  TAccountUsdtVaultAccount,
   TAccountTokenProgram,
   TAccountSystemProgram
 > {
@@ -298,13 +307,13 @@ export function getInitializeInstruction<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
+    mintA: { value: input.mintA ?? null, isWritable: true },
+    mintB: { value: input.mintB ?? null, isWritable: true },
     solVaultAccount: { value: input.solVaultAccount ?? null, isWritable: true },
     usdtVaultAccount: {
       value: input.usdtVaultAccount ?? null,
       isWritable: true,
     },
-    mintA: { value: input.mintA ?? null, isWritable: false },
-    mintB: { value: input.mintB ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
@@ -327,10 +336,10 @@ export function getInitializeInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.solVaultAccount),
-      getAccountMeta(accounts.usdtVaultAccount),
       getAccountMeta(accounts.mintA),
       getAccountMeta(accounts.mintB),
+      getAccountMeta(accounts.solVaultAccount),
+      getAccountMeta(accounts.usdtVaultAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
     ],
@@ -339,10 +348,10 @@ export function getInitializeInstruction<
   } as InitializeInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountSolVaultAccount,
-    TAccountUsdtVaultAccount,
     TAccountMintA,
     TAccountMintB,
+    TAccountSolVaultAccount,
+    TAccountUsdtVaultAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
   >);
@@ -355,10 +364,10 @@ export type ParsedInitializeInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    solVaultAccount: TAccountMetas[1];
-    usdtVaultAccount: TAccountMetas[2];
-    mintA: TAccountMetas[3];
-    mintB: TAccountMetas[4];
+    mintA: TAccountMetas[1];
+    mintB: TAccountMetas[2];
+    solVaultAccount: TAccountMetas[3];
+    usdtVaultAccount: TAccountMetas[4];
     tokenProgram: TAccountMetas[5];
     systemProgram: TAccountMetas[6];
   };
@@ -387,10 +396,10 @@ export function parseInitializeInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
-      solVaultAccount: getNextAccount(),
-      usdtVaultAccount: getNextAccount(),
       mintA: getNextAccount(),
       mintB: getNextAccount(),
+      solVaultAccount: getNextAccount(),
+      usdtVaultAccount: getNextAccount(),
       tokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
     },
