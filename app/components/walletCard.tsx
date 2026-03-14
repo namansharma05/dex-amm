@@ -23,6 +23,7 @@ export default function WalletCard() {
   const handleInitializeLP = async () => {
     if (!wallet) return;
     const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
+    console.log("rpc url is", rpcUrl);
     const rpc = createSolanaRpc(rpcUrl as any);
     try {
       const { signer } = createWalletTransactionSigner(wallet);
