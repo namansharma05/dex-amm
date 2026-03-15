@@ -40,8 +40,8 @@ pub mod dexter {
         let cpi_context_usdt =
             CpiContext::new(cpi_program_id, cpi_accounts_usdt).with_signer(signer_seeds_mint_b);
 
-        token_interface::mint_to(cpi_context_sol, 100_000_000)?;
-        token_interface::mint_to(cpi_context_usdt, 100_000_000)?;
+        token_interface::mint_to(cpi_context_sol, 1000_000_000 * 1000)?;
+        token_interface::mint_to(cpi_context_usdt, 1000_000_000 * 1000)?;
         msg!(
             "sol token minted: {}",
             ctx.accounts.sol_vault_account.amount
