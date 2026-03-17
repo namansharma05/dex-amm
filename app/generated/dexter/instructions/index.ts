@@ -7,3 +7,6 @@
  */
 
 export * from "./initialize";
+export * from "./mintSol";
+export * from "./mintUsdt";
+export * from "./swapTokens";

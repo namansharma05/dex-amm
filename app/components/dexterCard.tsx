@@ -1,6 +1,19 @@
 "use client";
 
+import { createWalletTransactionSigner } from "@solana/client";
+import {
+  appendTransactionMessageInstruction,
+  createSolanaRpc,
+  createTransactionMessage,
+  pipe,
+  sendTransactionWithoutConfirmingFactory,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  signTransactionMessageWithSigners,
+} from "@solana/kit";
+import { useWalletConnection } from "@solana/react-hooks";
 import { useState, useRef, useEffect } from "react";
+import { getSwapTokensInstructionAsync } from "../generated/dexter";
 
 const TOKENS = {
   SOL: {
@@ -132,10 +145,47 @@ export default function DexterCard() {
   const [sellToken, setSellToken] = useState<"SOL" | "USDT" | "">("SOL");
   const buyToken =
     sellToken === "SOL" ? "USDT" : sellToken === "USDT" ? "SOL" : "";
-
+  const { connectors, connect, disconnect, wallet, status } =
+    useWalletConnection();
   const handleSwap = () => {
     if (sellToken === "SOL") setSellToken("USDT");
     else if (sellToken === "USDT") setSellToken("SOL");
+  };
+
+  const handleAddFunds = async () => {
+    if (!wallet) return;
+    if (!sellToken) return;
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
+    const rpc = createSolanaRpc(rpcUrl as any);
+    try {
+      const { signer } = createWalletTransactionSigner(wallet);
+      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
+
+      const instruction = await getSwapTokensInstructionAsync({
+        signer,
+        amountIn: 1,
+        tokenName: sellToken,
+      });
+      const transactionMessage = pipe(
+        createTransactionMessage({ version: "legacy" }),
+        (tx) => setTransactionMessageFeePayer(signer.address, tx),
+        (tx) =>
+          setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        (tx) => appendTransactionMessageInstruction(instruction, tx)
+      );
+      const transactionSign =
+        await signTransactionMessageWithSigners(transactionMessage);
+      try {
+        await sendTransactionWithoutConfirmingFactory({ rpc })(
+          transactionSign,
+          { commitment: "confirmed" }
+        );
+      } catch (e) {
+        console.error("Error sending transaction", e);
+      }
+    } catch (e) {
+      console.error("Error Adding funds", e);
+    }
   };
 
   return (
@@ -214,7 +264,10 @@ export default function DexterCard() {
         </div>
 
         {/* Main Action Button */}
-        <button className="w-full bg-primary/10 text-primary hover:bg-primary/20 disabled:bg-muted/5 disabled:text-muted/30 py-4 mt-1 rounded-[20px] font-bold text-lg transition-all active:scale-[0.98] shadow-sm">
+        <button
+          onClick={handleAddFunds}
+          className="w-full bg-primary/10 text-primary hover:bg-primary/20 disabled:bg-muted/5 disabled:text-muted/30 py-4 mt-1 rounded-[20px] font-bold text-lg transition-all active:scale-[0.98] shadow-sm"
+        >
           Add Funds to Swap
         </button>
       </div>

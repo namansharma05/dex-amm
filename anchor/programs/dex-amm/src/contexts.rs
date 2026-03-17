@@ -126,3 +126,65 @@ pub struct SwapTokens<'info> {
 
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct MintSol<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        mint::authority = mint_a,
+        mint::decimals = 9,
+        mint::freeze_authority = mint_a,
+        seeds = [b"mint_a"],
+        bump,
+    )]
+    pub mint_a: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        token::mint = mint_a,
+        token::authority = signer,
+        token::token_program = token_program,
+        seeds = [b"sol_token", signer.key().as_ref()],
+        bump,
+    )]
+    pub user_sol_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MintUsdt<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        mint::authority = mint_b,
+        mint::decimals = 9,
+        mint::freeze_authority = mint_b,
+        seeds = [b"mint_b"],
+        bump,
+    )]
+    pub mint_b: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        token::mint = mint_b,
+        token::authority = signer,
+        token::token_program = token_program,
+        seeds = [b"usdt_token", signer.key().as_ref()],
+        bump,
+    )]
+    pub user_usdt_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+
+    pub system_program: Program<'info, System>,
+}

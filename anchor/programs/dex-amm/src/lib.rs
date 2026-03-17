@@ -197,4 +197,32 @@ pub mod dexter {
         }
         Ok(())
     }
+
+    pub fn mint_sol(ctx: Context<MintSol>, amount: u64) -> Result<()> {
+        let signer_seeds_mint_a: &[&[&[u8]]] = &[&[b"mint_a", &[ctx.bumps.mint_a]]];
+        let cpi_program_id = ctx.accounts.token_program.to_account_info();
+        let cpi_accounts_sol = MintTo {
+            mint: ctx.accounts.mint_a.to_account_info(),
+            to: ctx.accounts.user_sol_token_account.to_account_info(),
+            authority: ctx.accounts.mint_a.to_account_info(),
+        };
+        let cpi_context_sol = CpiContext::new(cpi_program_id.clone(), cpi_accounts_sol)
+            .with_signer(signer_seeds_mint_a);
+        token_interface::mint_to(cpi_context_sol, amount)?;
+        Ok(())
+    }
+
+    pub fn mint_usdt(ctx: Context<MintUsdt>, amount: u64) -> Result<()> {
+        let signer_seeds_mint_b: &[&[&[u8]]] = &[&[b"mint_b", &[ctx.bumps.mint_b]]];
+        let cpi_program_id = ctx.accounts.token_program.to_account_info();
+        let cpi_accounts_usdt = MintTo {
+            mint: ctx.accounts.mint_b.to_account_info(),
+            to: ctx.accounts.user_usdt_token_account.to_account_info(),
+            authority: ctx.accounts.mint_b.to_account_info(),
+        };
+        let cpi_context_usdt = CpiContext::new(cpi_program_id.clone(), cpi_accounts_usdt)
+            .with_signer(signer_seeds_mint_b);
+        token_interface::mint_to(cpi_context_usdt, amount)?;
+        Ok(())
+    }
 }
