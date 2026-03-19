@@ -17,7 +17,7 @@ import { useState } from "react";
 
 export default function MintUsdt() {
   const { wallet } = useWalletConnection();
-  const [amount, setAmount] = useState<string>("100");
+  const [amount, setAmount] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -33,7 +33,7 @@ export default function MintUsdt() {
       const rpc = createSolanaRpc(rpcUrl as any);
       const { signer } = createWalletTransactionSigner(wallet);
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-      
+
       const instruction = await getMintUsdtInstructionAsync({
         signer,
         amount: BigInt(parseFloat(amount) * 1_000_000), // Assuming 6 decimals for USDT
@@ -42,16 +42,18 @@ export default function MintUsdt() {
       const transactionMessage = pipe(
         createTransactionMessage({ version: 0 }),
         (tx) => setTransactionMessageFeePayerSigner(signer, tx),
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        (tx) =>
+          setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         (tx) => appendTransactionMessageInstruction(instruction, tx)
       );
 
-      const transactionSign = await signTransactionMessageWithSigners(transactionMessage);
-      
+      const transactionSign =
+        await signTransactionMessageWithSigners(transactionMessage);
+
       await sendTransactionWithoutConfirmingFactory({ rpc })(transactionSign, {
         commitment: "confirmed",
       });
-      
+
       console.log("USDT Token Minted");
       setStatus("success");
       setTimeout(() => setStatus("idle"), 3000);
@@ -74,14 +76,15 @@ export default function MintUsdt() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-foreground">Mint USDT</h2>
-            <p className="text-xs text-muted font-medium">Test USDT for liquidity</p>
+            <p className="text-xs text-muted font-medium">
+              Test USDT for liquidity
+            </p>
           </div>
         </div>
 
         <div className="bg-muted/5 border border-transparent rounded-[16px] p-4 flex flex-col gap-1 focus-within:border-primary/20 transition-all group">
           <div className="flex justify-between items-center text-xs font-bold text-muted uppercase tracking-wider">
             <span>Amount</span>
-            <span className="text-primary/60 cursor-pointer hover:text-primary transition-colors">Max</span>
           </div>
           <div className="flex items-center gap-3 mt-1">
             <input
@@ -102,15 +105,27 @@ export default function MintUsdt() {
             status === "success"
               ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
               : status === "error"
-              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-              : "bg-[#26A17B] text-white hover:opacity-90 disabled:bg-muted/10 disabled:text-muted/40 disabled:cursor-not-allowed cursor-pointer"
+                ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                : "bg-[#26A17B] text-white hover:opacity-90 disabled:bg-muted/10 disabled:text-muted/40 disabled:cursor-not-allowed cursor-pointer"
           }`}
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           ) : status === "success" ? (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
               Minted Successfully
             </>
           ) : status === "error" ? (
@@ -123,4 +138,3 @@ export default function MintUsdt() {
     </div>
   );
 }
-

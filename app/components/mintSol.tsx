@@ -17,7 +17,7 @@ import { useState } from "react";
 
 export default function MintSol() {
   const { wallet } = useWalletConnection();
-  const [amount, setAmount] = useState<string>("1");
+  const [amount, setAmount] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -25,15 +25,15 @@ export default function MintSol() {
     if (!wallet) return;
     const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
     if (!rpcUrl) return;
-    
+
     setIsLoading(true);
     setStatus("idle");
-    
+
     try {
       const rpc = createSolanaRpc(rpcUrl as any);
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
       const { signer } = createWalletTransactionSigner(wallet);
-      
+
       const instruction = await getMintSolInstructionAsync({
         signer,
         amount: BigInt(parseFloat(amount) * 1_000_000_000),
@@ -42,17 +42,18 @@ export default function MintSol() {
       const transactionMessage = pipe(
         createTransactionMessage({ version: 0 }),
         (tx) => setTransactionMessageFeePayerSigner(signer, tx),
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        (tx) =>
+          setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         (tx) => appendTransactionMessageInstruction(instruction, tx)
       );
 
-      const transactionSign = await signTransactionMessageWithSigners(transactionMessage);
-      
-      await sendTransactionWithoutConfirmingFactory({ rpc })(
-        transactionSign,
-        { commitment: "confirmed" }
-      );
-      
+      const transactionSign =
+        await signTransactionMessageWithSigners(transactionMessage);
+
+      await sendTransactionWithoutConfirmingFactory({ rpc })(transactionSign, {
+        commitment: "confirmed",
+      });
+
       console.log("SOL Token Minted");
       setStatus("success");
       setTimeout(() => setStatus("idle"), 3000);
@@ -75,14 +76,15 @@ export default function MintSol() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-foreground">Mint SOL</h2>
-            <p className="text-xs text-muted font-medium">Faucet tokens for testing</p>
+            <p className="text-xs text-muted font-medium">
+              Faucet tokens for testing
+            </p>
           </div>
         </div>
 
         <div className="bg-muted/5 border border-transparent rounded-[16px] p-4 flex flex-col gap-1 focus-within:border-primary/20 transition-all group">
           <div className="flex justify-between items-center text-xs font-bold text-muted uppercase tracking-wider">
             <span>Amount</span>
-            <span className="text-primary/60 cursor-pointer hover:text-primary transition-colors">Max</span>
           </div>
           <div className="flex items-center gap-3 mt-1">
             <input
@@ -103,25 +105,36 @@ export default function MintSol() {
             status === "success"
               ? "bg-green-500/10 text-green-500 hover:bg-green-500/20"
               : status === "error"
-              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-              : "bg-primary text-white hover:opacity-90 disabled:bg-muted/10 disabled:text-muted/40 disabled:cursor-not-allowed cursor-pointer"
+                ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                : "bg-primary text-white hover:opacity-90 disabled:bg-muted/10 disabled:text-muted/40 disabled:cursor-not-allowed cursor-pointer"
           }`}
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           ) : status === "success" ? (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
               Minted Successfully
             </>
           ) : status === "error" ? (
             "Error Minting"
           ) : (
-            "Mint Devnet Tokens"
+            "Mint Test SOL"
           )}
         </button>
       </div>
     </div>
   );
 }
-

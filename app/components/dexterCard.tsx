@@ -342,7 +342,7 @@ export default function DexterCard() {
         <button
           onClick={handleSwap}
           disabled={!wallet || isLoading || !sellAmount}
-          className="w-full relative mt-3 group/btn overflow-hidden rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full relative mt-10 group/btn overflow-hidden rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-[#ff4d9e] to-primary animate-premium-gradient group-hover/btn:brightness-110 transition-all duration-700"></div>
           <div className="relative py-4 w-full h-full flex items-center justify-center font-bold text-lg text-white group-hover/btn:scale-105 transition-transform">
