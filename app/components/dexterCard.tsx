@@ -10,6 +10,9 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
+  getProgramDerivedAddress,
+  getBytesEncoder,
+  getAddressEncoder,
 } from "@solana/kit";
 import { useWalletConnection } from "@solana/react-hooks";
 import { useState, useRef, useEffect } from "react";
@@ -152,10 +155,47 @@ export default function DexterCard() {
   const [sellToken, setSellToken] = useState<"SOL" | "USDT" | "">("SOL");
   const [sellAmount, setSellAmount] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
 
   const buyToken =
     sellToken === "SOL" ? "USDT" : sellToken === "USDT" ? "SOL" : "";
   const { wallet } = useWalletConnection();
+
+  const fetchBalances = async () => {
+    if (!wallet) {
+      setSolBalance(null);
+      setUsdtBalance(null);
+      return;
+    }
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
+    if (!rpcUrl) return;
+    const rpc = createSolanaRpc(rpcUrl as any);
+    try {
+      const address = wallet.account.address;
+      const solInfo = await rpc.getBalance(address).send();
+      setSolBalance(Number(solInfo.value) / 1e9);
+
+      const programAddress = "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2" as any;
+      const [usdtAccountData] = await getProgramDerivedAddress({
+        programAddress,
+        seeds: [
+          getBytesEncoder().encode(new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110])),
+          getAddressEncoder().encode(address as any),
+        ],
+      });
+      const usdtRes = await rpc.getTokenAccountBalance(usdtAccountData).send();
+      setUsdtBalance(Number(usdtRes.value.uiAmount));
+    } catch (e) {
+      setUsdtBalance(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchBalances();
+    const interval = setInterval(fetchBalances, 10000);
+    return () => clearInterval(interval);
+  }, [wallet]);
 
   const handleSwapTokens = () => {
     if (sellToken === "SOL") setSellToken("USDT");
@@ -175,7 +215,7 @@ export default function DexterCard() {
       const instruction = await getSwapTokensInstructionAsync({
         signer,
         amountIn: BigInt(
-          parseFloat(sellAmount) * (sellToken === "SOL" ? 1e9 : 1e6)
+          Math.floor(parseFloat(sellAmount) * 1e9)
         ),
         tokenName: sellToken,
       });
@@ -199,6 +239,7 @@ export default function DexterCard() {
       console.error("Error swapping", e);
     } finally {
       setIsLoading(false);
+      fetchBalances();
     }
   };
 
@@ -222,6 +263,16 @@ export default function DexterCard() {
         <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
           <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
             <span>Sell</span>
+            <span 
+              className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
+              onClick={() => {
+                if (sellToken === "SOL" && solBalance) setSellAmount(solBalance.toString());
+                if (sellToken === "USDT" && usdtBalance) setSellAmount(usdtBalance.toString());
+              }}
+            >
+              {sellToken === "SOL" && solBalance !== null && `Bal: ${solBalance.toFixed(4)}`}
+              {sellToken === "USDT" && usdtBalance !== null && `Bal: ${usdtBalance.toFixed(2)}`}
+            </span>
           </div>
           <div className="flex justify-between items-center gap-4">
             <input
@@ -287,6 +338,10 @@ export default function DexterCard() {
         <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 transition-all">
           <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
             <span>Buy</span>
+            <span className="text-foreground/70 text-xs">
+              {buyToken === "SOL" && solBalance !== null && `Bal: ${solBalance.toFixed(4)}`}
+              {buyToken === "USDT" && usdtBalance !== null && `Bal: ${usdtBalance.toFixed(2)}`}
+            </span>
           </div>
           <div className="flex justify-between items-center gap-4">
             <input

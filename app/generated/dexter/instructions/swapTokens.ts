@@ -58,11 +58,9 @@ export function getSwapTokensDiscriminatorBytes() {
 export type SwapTokensInstruction<
   TProgram extends string = typeof DEXTER_PROGRAM_ADDRESS,
   TAccountSigner extends string | AccountMeta<string> = string,
-  TAccountMintA extends string | AccountMeta<string> = string,
   TAccountMintB extends string | AccountMeta<string> = string,
   TAccountSolVaultAccount extends string | AccountMeta<string> = string,
   TAccountUsdtVaultAccount extends string | AccountMeta<string> = string,
-  TAccountUserSolTokenAccount extends string | AccountMeta<string> = string,
   TAccountUserUsdtTokenAccount extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends string | AccountMeta<string> =
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
@@ -77,9 +75,6 @@ export type SwapTokensInstruction<
         ? WritableSignerAccount<TAccountSigner> &
             AccountSignerMeta<TAccountSigner>
         : TAccountSigner,
-      TAccountMintA extends string
-        ? WritableAccount<TAccountMintA>
-        : TAccountMintA,
       TAccountMintB extends string
         ? WritableAccount<TAccountMintB>
         : TAccountMintB,
@@ -89,9 +84,6 @@ export type SwapTokensInstruction<
       TAccountUsdtVaultAccount extends string
         ? WritableAccount<TAccountUsdtVaultAccount>
         : TAccountUsdtVaultAccount,
-      TAccountUserSolTokenAccount extends string
-        ? WritableAccount<TAccountUserSolTokenAccount>
-        : TAccountUserSolTokenAccount,
       TAccountUserUsdtTokenAccount extends string
         ? WritableAccount<TAccountUserUsdtTokenAccount>
         : TAccountUserUsdtTokenAccount,
@@ -147,21 +139,17 @@ export function getSwapTokensInstructionDataCodec(): Codec<
 
 export type SwapTokensAsyncInput<
   TAccountSigner extends string = string,
-  TAccountMintA extends string = string,
   TAccountMintB extends string = string,
   TAccountSolVaultAccount extends string = string,
   TAccountUsdtVaultAccount extends string = string,
-  TAccountUserSolTokenAccount extends string = string,
   TAccountUserUsdtTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  mintA?: Address<TAccountMintA>;
   mintB?: Address<TAccountMintB>;
   solVaultAccount?: Address<TAccountSolVaultAccount>;
   usdtVaultAccount?: Address<TAccountUsdtVaultAccount>;
-  userSolTokenAccount?: Address<TAccountUserSolTokenAccount>;
   userUsdtTokenAccount?: Address<TAccountUserUsdtTokenAccount>;
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -171,11 +159,9 @@ export type SwapTokensAsyncInput<
 
 export async function getSwapTokensInstructionAsync<
   TAccountSigner extends string,
-  TAccountMintA extends string,
   TAccountMintB extends string,
   TAccountSolVaultAccount extends string,
   TAccountUsdtVaultAccount extends string,
-  TAccountUserSolTokenAccount extends string,
   TAccountUserUsdtTokenAccount extends string,
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
@@ -183,11 +169,9 @@ export async function getSwapTokensInstructionAsync<
 >(
   input: SwapTokensAsyncInput<
     TAccountSigner,
-    TAccountMintA,
     TAccountMintB,
     TAccountSolVaultAccount,
     TAccountUsdtVaultAccount,
-    TAccountUserSolTokenAccount,
     TAccountUserUsdtTokenAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
@@ -197,11 +181,9 @@ export async function getSwapTokensInstructionAsync<
   SwapTokensInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountMintA,
     TAccountMintB,
     TAccountSolVaultAccount,
     TAccountUsdtVaultAccount,
-    TAccountUserSolTokenAccount,
     TAccountUserUsdtTokenAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
@@ -213,15 +195,10 @@ export async function getSwapTokensInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    mintA: { value: input.mintA ?? null, isWritable: true },
     mintB: { value: input.mintB ?? null, isWritable: true },
     solVaultAccount: { value: input.solVaultAccount ?? null, isWritable: true },
     usdtVaultAccount: {
       value: input.usdtVaultAccount ?? null,
-      isWritable: true,
-    },
-    userSolTokenAccount: {
-      value: input.userSolTokenAccount ?? null,
       isWritable: true,
     },
     userUsdtTokenAccount: {
@@ -240,14 +217,6 @@ export async function getSwapTokensInstructionAsync<
   const args = { ...input };
 
   // Resolve default values.
-  if (!accounts.mintA.value) {
-    accounts.mintA.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(new Uint8Array([109, 105, 110, 116, 95, 97])),
-      ],
-    });
-  }
   if (!accounts.mintB.value) {
     accounts.mintB.value = await getProgramDerivedAddress({
       programAddress,
@@ -261,7 +230,7 @@ export async function getSwapTokensInstructionAsync<
       programAddress,
       seeds: [
         getBytesEncoder().encode(
-          new Uint8Array([115, 111, 108, 95, 116, 111, 107, 101, 110]),
+          new Uint8Array([115, 111, 108, 95, 118, 97, 117, 108, 116]),
         ),
       ],
     });
@@ -273,17 +242,6 @@ export async function getSwapTokensInstructionAsync<
         getBytesEncoder().encode(
           new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110]),
         ),
-      ],
-    });
-  }
-  if (!accounts.userSolTokenAccount.value) {
-    accounts.userSolTokenAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([115, 111, 108, 95, 116, 111, 107, 101, 110]),
-        ),
-        getAddressEncoder().encode(expectAddress(accounts.signer.value)),
       ],
     });
   }
@@ -311,11 +269,9 @@ export async function getSwapTokensInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.mintA),
       getAccountMeta(accounts.mintB),
       getAccountMeta(accounts.solVaultAccount),
       getAccountMeta(accounts.usdtVaultAccount),
-      getAccountMeta(accounts.userSolTokenAccount),
       getAccountMeta(accounts.userUsdtTokenAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
@@ -327,11 +283,9 @@ export async function getSwapTokensInstructionAsync<
   } as SwapTokensInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountMintA,
     TAccountMintB,
     TAccountSolVaultAccount,
     TAccountUsdtVaultAccount,
-    TAccountUserSolTokenAccount,
     TAccountUserUsdtTokenAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
@@ -340,21 +294,17 @@ export async function getSwapTokensInstructionAsync<
 
 export type SwapTokensInput<
   TAccountSigner extends string = string,
-  TAccountMintA extends string = string,
   TAccountMintB extends string = string,
   TAccountSolVaultAccount extends string = string,
   TAccountUsdtVaultAccount extends string = string,
-  TAccountUserSolTokenAccount extends string = string,
   TAccountUserUsdtTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   signer: TransactionSigner<TAccountSigner>;
-  mintA: Address<TAccountMintA>;
   mintB: Address<TAccountMintB>;
   solVaultAccount: Address<TAccountSolVaultAccount>;
   usdtVaultAccount: Address<TAccountUsdtVaultAccount>;
-  userSolTokenAccount: Address<TAccountUserSolTokenAccount>;
   userUsdtTokenAccount: Address<TAccountUserUsdtTokenAccount>;
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -364,11 +314,9 @@ export type SwapTokensInput<
 
 export function getSwapTokensInstruction<
   TAccountSigner extends string,
-  TAccountMintA extends string,
   TAccountMintB extends string,
   TAccountSolVaultAccount extends string,
   TAccountUsdtVaultAccount extends string,
-  TAccountUserSolTokenAccount extends string,
   TAccountUserUsdtTokenAccount extends string,
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
@@ -376,11 +324,9 @@ export function getSwapTokensInstruction<
 >(
   input: SwapTokensInput<
     TAccountSigner,
-    TAccountMintA,
     TAccountMintB,
     TAccountSolVaultAccount,
     TAccountUsdtVaultAccount,
-    TAccountUserSolTokenAccount,
     TAccountUserUsdtTokenAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
@@ -389,11 +335,9 @@ export function getSwapTokensInstruction<
 ): SwapTokensInstruction<
   TProgramAddress,
   TAccountSigner,
-  TAccountMintA,
   TAccountMintB,
   TAccountSolVaultAccount,
   TAccountUsdtVaultAccount,
-  TAccountUserSolTokenAccount,
   TAccountUserUsdtTokenAccount,
   TAccountTokenProgram,
   TAccountSystemProgram
@@ -404,15 +348,10 @@ export function getSwapTokensInstruction<
   // Original accounts.
   const originalAccounts = {
     signer: { value: input.signer ?? null, isWritable: true },
-    mintA: { value: input.mintA ?? null, isWritable: true },
     mintB: { value: input.mintB ?? null, isWritable: true },
     solVaultAccount: { value: input.solVaultAccount ?? null, isWritable: true },
     usdtVaultAccount: {
       value: input.usdtVaultAccount ?? null,
-      isWritable: true,
-    },
-    userSolTokenAccount: {
-      value: input.userSolTokenAccount ?? null,
       isWritable: true,
     },
     userUsdtTokenAccount: {
@@ -444,11 +383,9 @@ export function getSwapTokensInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta(accounts.signer),
-      getAccountMeta(accounts.mintA),
       getAccountMeta(accounts.mintB),
       getAccountMeta(accounts.solVaultAccount),
       getAccountMeta(accounts.usdtVaultAccount),
-      getAccountMeta(accounts.userSolTokenAccount),
       getAccountMeta(accounts.userUsdtTokenAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.systemProgram),
@@ -460,11 +397,9 @@ export function getSwapTokensInstruction<
   } as SwapTokensInstruction<
     TProgramAddress,
     TAccountSigner,
-    TAccountMintA,
     TAccountMintB,
     TAccountSolVaultAccount,
     TAccountUsdtVaultAccount,
-    TAccountUserSolTokenAccount,
     TAccountUserUsdtTokenAccount,
     TAccountTokenProgram,
     TAccountSystemProgram
@@ -478,14 +413,12 @@ export type ParsedSwapTokensInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     signer: TAccountMetas[0];
-    mintA: TAccountMetas[1];
-    mintB: TAccountMetas[2];
-    solVaultAccount: TAccountMetas[3];
-    usdtVaultAccount: TAccountMetas[4];
-    userSolTokenAccount: TAccountMetas[5];
-    userUsdtTokenAccount: TAccountMetas[6];
-    tokenProgram: TAccountMetas[7];
-    systemProgram: TAccountMetas[8];
+    mintB: TAccountMetas[1];
+    solVaultAccount: TAccountMetas[2];
+    usdtVaultAccount: TAccountMetas[3];
+    userUsdtTokenAccount: TAccountMetas[4];
+    tokenProgram: TAccountMetas[5];
+    systemProgram: TAccountMetas[6];
   };
   data: SwapTokensInstructionData;
 };
@@ -498,7 +431,7 @@ export function parseSwapTokensInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSwapTokensInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error("Not enough accounts");
   }
@@ -512,11 +445,9 @@ export function parseSwapTokensInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       signer: getNextAccount(),
-      mintA: getNextAccount(),
       mintB: getNextAccount(),
       solVaultAccount: getNextAccount(),
       usdtVaultAccount: getNextAccount(),
-      userSolTokenAccount: getNextAccount(),
       userUsdtTokenAccount: getNextAccount(),
       tokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),

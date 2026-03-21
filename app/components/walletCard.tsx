@@ -29,7 +29,10 @@ export default function WalletCard() {
     try {
       const { signer } = createWalletTransactionSigner(wallet);
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-      const instruction = await getInitializeInstructionAsync({ signer });
+      const instruction = await getInitializeInstructionAsync({ 
+        signer,
+        amountSol: 1000000000n // 1 Native SOL
+      });
       let transactionMessage = pipe(
         createTransactionMessage({ version: "legacy" }),
         (tx) => setTransactionMessageFeePayer(signer.address, tx),

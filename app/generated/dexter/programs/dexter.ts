@@ -18,22 +18,40 @@ import {
 } from "@solana/kit";
 import {
   parseInitializeInstruction,
-  parseMintSolInstruction,
-  parseMintUsdtInstruction,
   parseSwapTokensInstruction,
   type ParsedInitializeInstruction,
-  type ParsedMintSolInstruction,
-  type ParsedMintUsdtInstruction,
   type ParsedSwapTokensInstruction,
 } from "../instructions";
 
 export const DEXTER_PROGRAM_ADDRESS =
   "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2" as Address<"7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2">;
 
+export enum DexterAccount {
+  SolVault,
+}
+
+export function identifyDexterAccount(
+  account: { data: ReadonlyUint8Array } | ReadonlyUint8Array,
+): DexterAccount {
+  const data = "data" in account ? account.data : account;
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([21, 132, 230, 103, 19, 209, 129, 248]),
+      ),
+      0,
+    )
+  ) {
+    return DexterAccount.SolVault;
+  }
+  throw new Error(
+    "The provided account could not be identified as a dexter account.",
+  );
+}
+
 export enum DexterInstruction {
   Initialize,
-  MintSol,
-  MintUsdt,
   SwapTokens,
 }
 
@@ -51,28 +69,6 @@ export function identifyDexterInstruction(
     )
   ) {
     return DexterInstruction.Initialize;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([150, 224, 6, 12, 74, 224, 40, 133]),
-      ),
-      0,
-    )
-  ) {
-    return DexterInstruction.MintSol;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([13, 14, 24, 156, 239, 160, 25, 220]),
-      ),
-      0,
-    )
-  ) {
-    return DexterInstruction.MintUsdt;
   }
   if (
     containsBytes(
@@ -97,12 +93,6 @@ export type ParsedDexterInstruction<
       instructionType: DexterInstruction.Initialize;
     } & ParsedInitializeInstruction<TProgram>)
   | ({
-      instructionType: DexterInstruction.MintSol;
-    } & ParsedMintSolInstruction<TProgram>)
-  | ({
-      instructionType: DexterInstruction.MintUsdt;
-    } & ParsedMintUsdtInstruction<TProgram>)
-  | ({
       instructionType: DexterInstruction.SwapTokens;
     } & ParsedSwapTokensInstruction<TProgram>);
 
@@ -116,20 +106,6 @@ export function parseDexterInstruction<TProgram extends string>(
       return {
         instructionType: DexterInstruction.Initialize,
         ...parseInitializeInstruction(instruction),
-      };
-    }
-    case DexterInstruction.MintSol: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: DexterInstruction.MintSol,
-        ...parseMintSolInstruction(instruction),
-      };
-    }
-    case DexterInstruction.MintUsdt: {
-      assertIsInstructionWithAccounts(instruction);
-      return {
-        instructionType: DexterInstruction.MintUsdt,
-        ...parseMintUsdtInstruction(instruction),
       };
     }
     case DexterInstruction.SwapTokens: {
