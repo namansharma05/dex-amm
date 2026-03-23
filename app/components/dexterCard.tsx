@@ -157,35 +157,80 @@ export default function DexterCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
+  const [poolSolReserve, setPoolSolReserve] = useState<number | null>(null);
+  const [poolUsdtReserve, setPoolUsdtReserve] = useState<number | null>(null);
 
   const buyToken =
     sellToken === "SOL" ? "USDT" : sellToken === "USDT" ? "SOL" : "";
   const { wallet } = useWalletConnection();
 
   const fetchBalances = async () => {
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
+    if (!rpcUrl) return;
+    const rpc = createSolanaRpc(rpcUrl as any);
+
+    try {
+      const programAddress =
+        "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2" as any;
+      const [solVaultData] = await getProgramDerivedAddress({
+        programAddress,
+        seeds: [
+          getBytesEncoder().encode(
+            new Uint8Array([115, 111, 108, 95, 118, 97, 117, 108, 116])
+          ),
+        ],
+      });
+      const listSol = await rpc.getBalance(solVaultData).send();
+      setPoolSolReserve(Number(listSol.value) / 1e9);
+
+      const [usdtVaultData] = await getProgramDerivedAddress({
+        programAddress,
+        seeds: [
+          getBytesEncoder().encode(
+            new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110])
+          ),
+        ],
+      });
+      try {
+        const listUsdt = await rpc.getTokenAccountBalance(usdtVaultData).send();
+        setPoolUsdtReserve(Number(listUsdt.value.uiAmount));
+      } catch (e) {
+        setPoolUsdtReserve(0);
+      }
+    } catch (e) {
+      console.error("Error fetching pool", e);
+    }
+
     if (!wallet) {
       setSolBalance(null);
       setUsdtBalance(null);
       return;
     }
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
-    if (!rpcUrl) return;
-    const rpc = createSolanaRpc(rpcUrl as any);
+
     try {
       const address = wallet.account.address;
       const solInfo = await rpc.getBalance(address).send();
       setSolBalance(Number(solInfo.value) / 1e9);
 
-      const programAddress = "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2" as any;
+      const programAddress =
+        "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2" as any;
       const [usdtAccountData] = await getProgramDerivedAddress({
         programAddress,
         seeds: [
-          getBytesEncoder().encode(new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110])),
+          getBytesEncoder().encode(
+            new Uint8Array([117, 115, 100, 116, 95, 116, 111, 107, 101, 110])
+          ),
           getAddressEncoder().encode(address as any),
         ],
       });
-      const usdtRes = await rpc.getTokenAccountBalance(usdtAccountData).send();
-      setUsdtBalance(Number(usdtRes.value.uiAmount));
+      try {
+        const usdtRes = await rpc
+          .getTokenAccountBalance(usdtAccountData)
+          .send();
+        setUsdtBalance(Number(usdtRes.value.uiAmount));
+      } catch (e) {
+        setUsdtBalance(0);
+      }
     } catch (e) {
       setUsdtBalance(0);
     }
@@ -196,6 +241,30 @@ export default function DexterCard() {
     const interval = setInterval(fetchBalances, 10000);
     return () => clearInterval(interval);
   }, [wallet]);
+
+  let estimatedBuyAmount = "";
+  if (
+    sellAmount &&
+    !isNaN(parseFloat(sellAmount)) &&
+    poolSolReserve &&
+    poolUsdtReserve
+  ) {
+    const inputAmount = parseFloat(sellAmount);
+    if (sellToken === "SOL") {
+      const out =
+        (inputAmount * poolUsdtReserve) / (poolSolReserve + inputAmount);
+      estimatedBuyAmount = out > 0 ? out.toFixed(4) : "";
+    } else {
+      const out =
+        (inputAmount * poolSolReserve) / (poolUsdtReserve + inputAmount);
+      estimatedBuyAmount = out > 0 ? out.toFixed(4) : "";
+    }
+  }
+
+  const currentRate =
+    poolSolReserve && poolUsdtReserve && poolSolReserve > 0
+      ? (poolUsdtReserve / poolSolReserve).toFixed(4)
+      : "0.00";
 
   const handleSwapTokens = () => {
     if (sellToken === "SOL") setSellToken("USDT");
@@ -214,9 +283,7 @@ export default function DexterCard() {
 
       const instruction = await getSwapTokensInstructionAsync({
         signer,
-        amountIn: BigInt(
-          Math.floor(parseFloat(sellAmount) * 1e9)
-        ),
+        amountIn: BigInt(Math.floor(parseFloat(sellAmount) * 1e9)),
         tokenName: sellToken,
       });
 
@@ -263,15 +330,21 @@ export default function DexterCard() {
         <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
           <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
             <span>Sell</span>
-            <span 
+            <span
               className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
               onClick={() => {
-                if (sellToken === "SOL" && solBalance) setSellAmount(solBalance.toString());
-                if (sellToken === "USDT" && usdtBalance) setSellAmount(usdtBalance.toString());
+                if (sellToken === "SOL" && solBalance)
+                  setSellAmount(solBalance.toString());
+                if (sellToken === "USDT" && usdtBalance)
+                  setSellAmount(usdtBalance.toString());
               }}
             >
-              {sellToken === "SOL" && solBalance !== null && `Bal: ${solBalance.toFixed(4)}`}
-              {sellToken === "USDT" && usdtBalance !== null && `Bal: ${usdtBalance.toFixed(2)}`}
+              {sellToken === "SOL" &&
+                solBalance !== null &&
+                `Bal: ${solBalance.toFixed(4)}`}
+              {sellToken === "USDT" &&
+                usdtBalance !== null &&
+                `Bal: ${usdtBalance.toFixed(2)}`}
             </span>
           </div>
           <div className="flex justify-between items-center gap-4">
@@ -339,8 +412,12 @@ export default function DexterCard() {
           <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
             <span>Buy</span>
             <span className="text-foreground/70 text-xs">
-              {buyToken === "SOL" && solBalance !== null && `Bal: ${solBalance.toFixed(4)}`}
-              {buyToken === "USDT" && usdtBalance !== null && `Bal: ${usdtBalance.toFixed(2)}`}
+              {buyToken === "SOL" &&
+                solBalance !== null &&
+                `Bal: ${solBalance.toFixed(4)}`}
+              {buyToken === "USDT" &&
+                usdtBalance !== null &&
+                `Bal: ${usdtBalance.toFixed(2)}`}
             </span>
           </div>
           <div className="flex justify-between items-center gap-4">
@@ -348,6 +425,7 @@ export default function DexterCard() {
               type="number"
               placeholder="0"
               readOnly
+              value={estimatedBuyAmount}
               className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 opacity-50 cursor-default"
             />
             <TokenDropdown
@@ -385,7 +463,7 @@ export default function DexterCard() {
         <div className="px-2 py-1 flex flex-col gap-2 mt-2">
           <div className="flex justify-between items-center text-xs font-bold">
             <span className="text-muted">Exchange Rate</span>
-            <span className="text-foreground">1 SOL = 154.2 USDT</span>
+            <span className="text-foreground">1 SOL = {currentRate} USDT</span>
           </div>
           <div className="flex justify-between items-center text-xs font-bold">
             <span className="text-muted">Network Fee</span>

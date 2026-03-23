@@ -16,7 +16,8 @@ import {
 import { useState } from "react";
 
 export default function WalletCard() {
-  const { connectors, connect, disconnect, wallet, status } = useWalletConnection();
+  const { connectors, connect, disconnect, wallet, status } =
+    useWalletConnection();
   const [isInitializing, setIsInitializing] = useState(false);
 
   const address = wallet?.account.address.toString();
@@ -29,22 +30,23 @@ export default function WalletCard() {
     try {
       const { signer } = createWalletTransactionSigner(wallet);
       const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-      const instruction = await getInitializeInstructionAsync({ 
+      const instruction = await getInitializeInstructionAsync({
         signer,
-        amountSol: 1000000000n // 1 Native SOL
+        amountSol: 1000000000n, // 1 Native SOL
       });
       let transactionMessage = pipe(
         createTransactionMessage({ version: "legacy" }),
         (tx) => setTransactionMessageFeePayer(signer.address, tx),
-        (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+        (tx) =>
+          setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
         (tx) => appendTransactionMessageInstruction(instruction, tx)
       );
-      const transactionSign = await signTransactionMessageWithSigners(transactionMessage);
+      const transactionSign =
+        await signTransactionMessageWithSigners(transactionMessage);
 
-      await sendTransactionWithoutConfirmingFactory({ rpc })(
-        transactionSign,
-        { commitment: "confirmed" }
-      );
+      await sendTransactionWithoutConfirmingFactory({ rpc })(transactionSign, {
+        commitment: "confirmed",
+      });
       console.log("LP initialized");
     } catch (e) {
       console.error(e);
@@ -56,23 +58,34 @@ export default function WalletCard() {
   return (
     <section className="w-full max-w-3xl bg-card border border-border-low rounded-[32px] shadow-[0_32px_80px_-32px_rgba(0,0,0,0.1)] overflow-hidden transition-all hover:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.15)] group relative">
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary/20 via-primary to-primary/20 opacity-50"></div>
-      
+
       <div className="p-8 space-y-8">
         <div className="flex items-center justify-between gap-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Wallet Connection</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              Wallet Connection
+            </h2>
             <p className="text-sm font-medium text-muted max-w-md leading-relaxed">
-              Connect your Solana wallet to interact with the Dexter AMM and manage liquidity.
+              Connect your Solana wallet to interact with the Dexter AMM and
+              manage liquidity.
             </p>
           </div>
-          <div className={`flex items-center gap-2.5 px-4 py-2 rounded-full border transition-all duration-500 ${
-            status === "connected" 
-              ? "bg-green-500/10 border-green-500/20 text-green-500" 
-              : "bg-muted/10 border-border-low text-muted"
-          }`}>
-            <span className={`w-2.5 h-2.5 rounded-full ${status === "connected" ? "bg-green-500 animate-pulse" : "bg-muted/40"}`} />
+          <div
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-full border transition-all duration-500 ${
+              status === "connected"
+                ? "bg-green-500/10 border-green-500/20 text-green-500"
+                : "bg-muted/10 border-border-low text-muted"
+            }`}
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${status === "connected" ? "bg-green-500 animate-pulse" : "bg-muted/40"}`}
+            />
             <span className="text-xs font-bold uppercase tracking-wider">
-              {status === "connected" ? "Connected" : status === "connecting" ? "Connecting" : "Disconnected"}
+              {status === "connected"
+                ? "Connected"
+                : status === "connecting"
+                  ? "Connecting"
+                  : "Disconnected"}
             </span>
           </div>
         </div>
@@ -82,7 +95,11 @@ export default function WalletCard() {
             <button
               key={connector.id}
               onClick={() => connect(connector.id)}
-              disabled={status === "connecting" || (status === "connected" && wallet?.connector.id === connector.id)}
+              disabled={
+                status === "connecting" ||
+                (status === "connected" &&
+                  wallet?.connector.id === connector.id)
+              }
               className={`group relative flex flex-col items-start gap-4 p-5 rounded-[22px] border transition-all duration-300 cursor-pointer overflow-hidden ${
                 status === "connected" && wallet?.connector.id === connector.id
                   ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10 shadow-sm"
@@ -91,14 +108,32 @@ export default function WalletCard() {
             >
               <div className="flex w-full items-center justify-between">
                 <span className="font-bold text-lg">{connector.name}</span>
-                {status === "connected" && wallet?.connector.id === connector.id && (
-                  <div className="bg-primary text-white p-1 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </div>
-                )}
+                {status === "connected" &&
+                  wallet?.connector.id === connector.id && (
+                    <div className="bg-primary text-white p-1 rounded-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                  )}
               </div>
               <span className="text-xs font-bold text-muted/60 uppercase tracking-wide">
-                {status === "connecting" ? "Linking..." : status === "connected" && wallet?.connector.id === connector.id ? "Connected" : "Connect Wallet"}
+                {status === "connecting"
+                  ? "Linking..."
+                  : status === "connected" &&
+                      wallet?.connector.id === connector.id
+                    ? "Connected"
+                    : "Connect Wallet"}
               </span>
             </button>
           ))}
@@ -107,15 +142,19 @@ export default function WalletCard() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border-low pt-8">
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-muted uppercase tracking-widest pl-1">Wallet Address</span>
+              <span className="text-[10px] font-bold text-muted uppercase tracking-widest pl-1">
+                Wallet Address
+              </span>
               <div className="group/addr relative">
                 <span className="inline-flex items-center rounded-xl bg-muted/5 border border-border-low px-4 py-2.5 font-mono text-xs font-bold text-foreground/80 hover:bg-muted/10 transition-colors">
-                  {address ? `${address.slice(0, 12)}...${address.slice(-12)}` : "Not linked"}
+                  {address
+                    ? `${address.slice(0, 12)}...${address.slice(-12)}`
+                    : "Not linked"}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => disconnect()}
@@ -129,7 +168,9 @@ export default function WalletCard() {
               disabled={status !== "connected" || isInitializing}
               className="relative px-8 py-3 rounded-2xl font-bold text-sm bg-card border border-border-low shadow-sm hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
             >
-              <span className={isInitializing ? "opacity-0" : "relative z-10"}>Initialize LP</span>
+              <span className={isInitializing ? "opacity-0" : "relative z-10"}>
+                Initialize LP
+              </span>
               {isInitializing && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -142,4 +183,3 @@ export default function WalletCard() {
     </section>
   );
 }
-

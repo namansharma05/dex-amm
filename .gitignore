@@ -45,3 +45,6 @@ next-env.d.ts
 /anchor/target/
 
 .surfpool/
+
+PRD.md
+CPMM_AMM_PLAN.md
