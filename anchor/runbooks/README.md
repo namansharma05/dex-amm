@@ -62,6 +62,7 @@ Additionally, the [Visual Studio Code extension](https://marketplace.visualstudi
 Our [Surfpool 101 Series](https://www.youtube.com/playlist?list=PL0FMgRjJMRzO1FdunpMS-aUS4GNkgyr3T) is also a great place to start learning about Surfpool and its features:
 <a href="https://www.youtube.com/playlist?list=PL0FMgRjJMRzO1FdunpMS-aUS4GNkgyr3T">
 <picture>
+
 <source srcset="https://raw.githubusercontent.com/txtx/surfpool/main/doc/assets/youtube.png">
 <img alt="Surfpool 101 series" style="max-width: 100%;">
 </picture>

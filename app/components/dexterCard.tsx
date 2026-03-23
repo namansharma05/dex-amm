@@ -152,8 +152,11 @@ function TokenDropdown({
 }
 
 export default function DexterCard() {
+  const [activeTab, setActiveTab] = useState<"swap" | "liquidity">("swap");
   const [sellToken, setSellToken] = useState<"SOL" | "USDT" | "">("SOL");
   const [sellAmount, setSellAmount] = useState<string>("");
+  const [liquiditySolAmount, setLiquiditySolAmount] = useState<string>("");
+  const [liquidityUsdtAmount, setLiquidityUsdtAmount] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
@@ -317,147 +320,319 @@ export default function DexterCard() {
 
       <div className="p-4 flex flex-col gap-1.5 relative z-10">
         {/* Card Header */}
-        <div className="flex justify-between items-center px-2 mb-2">
-          <div className="flex gap-4">
-            <span className="text-base font-bold text-foreground relative">
-              Swap
-              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary rounded-full"></div>
-            </span>
-          </div>
-        </div>
-
-        {/* Sell Section */}
-        <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
-          <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
-            <span>Sell</span>
-            <span
-              className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
-              onClick={() => {
-                if (sellToken === "SOL" && solBalance)
-                  setSellAmount(solBalance.toString());
-                if (sellToken === "USDT" && usdtBalance)
-                  setSellAmount(usdtBalance.toString());
-              }}
+        <div className="flex justify-between items-center px-2 mb-4">
+          <div className="flex gap-6 bg-muted/5 p-1 rounded-2xl border border-border-low/30">
+            <button
+              onClick={() => setActiveTab("swap")}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "swap" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground/70"}`}
             >
-              {sellToken === "SOL" &&
-                solBalance !== null &&
-                `Bal: ${solBalance.toFixed(4)}`}
-              {sellToken === "USDT" &&
-                usdtBalance !== null &&
-                `Bal: ${usdtBalance.toFixed(2)}`}
-            </span>
+              Swap
+            </button>
+            <button
+              onClick={() => setActiveTab("liquidity")}
+              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === "liquidity" ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground/70"}`}
+            >
+              Liquidity
+            </button>
           </div>
-          <div className="flex justify-between items-center gap-4">
-            <input
-              type="number"
-              placeholder="0"
-              value={sellAmount}
-              onChange={(e) => setSellAmount(e.target.value)}
-              className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <TokenDropdown
-              value={sellToken}
-              onChange={(val) => setSellToken(val)}
-              triggerClassName="flex items-center justify-between bg-card hover:bg-muted/5 text-foreground border border-border-low/50 shadow-sm w-[130px] p-1.5 pr-4"
-            />
-          </div>
-          <div className="flex justify-between items-center text-sm font-bold text-muted/40">
-            <span>~$0.00</span>
-            <div className="flex items-center gap-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
-              </svg>
-              <span>0.00</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Swap Arrow */}
-        <div className="relative -my-5 z-10 flex justify-center">
-          <button
-            onClick={handleSwapTokens}
-            className="bg-card border-[6px] border-card rounded-2xl p-0.5 shadow-xl hover:scale-110 active:scale-95 transition-all group cursor-pointer"
-          >
-            <div className="bg-muted/5 group-hover:bg-primary/10 p-2.5 rounded-xl transition-colors text-primary border border-border-low/50 group-hover:border-primary/20">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 5v14M19 12l-7 7-7-7" />
-              </svg>
-            </div>
+          <button className="text-muted hover:text-foreground transition-colors p-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
           </button>
         </div>
 
-        {/* Buy Section */}
-        <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 transition-all">
-          <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
-            <span>Buy</span>
-            <span className="text-foreground/70 text-xs">
-              {buyToken === "SOL" &&
-                solBalance !== null &&
-                `Bal: ${solBalance.toFixed(4)}`}
-              {buyToken === "USDT" &&
-                usdtBalance !== null &&
-                `Bal: ${usdtBalance.toFixed(2)}`}
-            </span>
-          </div>
-          <div className="flex justify-between items-center gap-4">
-            <input
-              type="number"
-              placeholder="0"
-              readOnly
-              value={estimatedBuyAmount}
-              className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 opacity-50 cursor-default"
-            />
-            <TokenDropdown
-              value={buyToken}
-              onChange={(val) => {
-                if (val === "SOL") setSellToken("USDT");
-                else if (val === "USDT") setSellToken("SOL");
-              }}
-              triggerClassName="flex items-center justify-between bg-card hover:bg-muted/5 text-foreground border border-border-low/50 shadow-sm w-[130px] p-1.5 pr-4"
-            />
-          </div>
-          <div className="flex justify-between items-center text-sm font-bold text-muted/40">
-            <span>~$0.00</span>
-            <div className="flex items-center gap-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
-              </svg>
-              <span>0.00</span>
+        {activeTab === "swap" ? (
+          <>
+            {/* Sell Section */}
+            <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
+              <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
+                <span>Sell</span>
+                <span
+                  className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => {
+                    if (sellToken === "SOL" && solBalance)
+                      setSellAmount(solBalance.toString());
+                    if (sellToken === "USDT" && usdtBalance)
+                      setSellAmount(usdtBalance.toString());
+                  }}
+                >
+                  {sellToken === "SOL" &&
+                    solBalance !== null &&
+                    `Bal: ${solBalance.toFixed(4)}`}
+                  {sellToken === "USDT" &&
+                    usdtBalance !== null &&
+                    `Bal: ${usdtBalance.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-4">
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={sellAmount}
+                  onChange={(e) => setSellAmount(e.target.value)}
+                  className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <TokenDropdown
+                  value={sellToken}
+                  onChange={(val) => setSellToken(val)}
+                  triggerClassName="flex items-center justify-between bg-card hover:bg-muted/5 text-foreground border border-border-low/50 shadow-sm w-[130px] p-1.5 pr-4"
+                />
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold text-muted/40">
+                <span>~$0.00</span>
+                <div className="flex items-center gap-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+                    <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+                  </svg>
+                  <span>0.00</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Swap Arrow */}
+            <div className="relative -my-5 z-10 flex justify-center">
+              <button
+                onClick={handleSwapTokens}
+                className="bg-card border-[6px] border-card rounded-2xl p-0.5 shadow-xl hover:scale-110 active:scale-95 transition-all group cursor-pointer"
+              >
+                <div className="bg-muted/5 group-hover:bg-primary/10 p-2.5 rounded-xl transition-colors text-primary border border-border-low/50 group-hover:border-primary/20">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 5v14M19 12l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+
+            {/* Buy Section */}
+            <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 transition-all">
+              <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
+                <span>Buy</span>
+                <span className="text-foreground/70 text-xs">
+                  {buyToken === "SOL" &&
+                    solBalance !== null &&
+                    `Bal: ${solBalance.toFixed(4)}`}
+                  {buyToken === "USDT" &&
+                    usdtBalance !== null &&
+                    `Bal: ${usdtBalance.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-4">
+                <input
+                  type="number"
+                  placeholder="0"
+                  readOnly
+                  value={estimatedBuyAmount}
+                  className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 opacity-50 cursor-default"
+                />
+                <TokenDropdown
+                  value={buyToken}
+                  onChange={(val) => {
+                    if (val === "SOL") setSellToken("USDT");
+                    else if (val === "USDT") setSellToken("SOL");
+                  }}
+                  triggerClassName="flex items-center justify-between bg-card hover:bg-muted/5 text-foreground border border-border-low/50 shadow-sm w-[130px] p-1.5 pr-4"
+                />
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold text-muted/40">
+                <span>~$0.00</span>
+                <div className="flex items-center gap-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+                    <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+                  </svg>
+                  <span>0.00</span>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Liquidity Top Section (SOL) */}
+            <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
+              <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
+                <span>Amount of SOL</span>
+                <span
+                  className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => {
+                    if (solBalance) {
+                      setLiquiditySolAmount(solBalance.toString());
+                      if (
+                        poolSolReserve &&
+                        poolUsdtReserve &&
+                        poolSolReserve > 0
+                      ) {
+                        setLiquidityUsdtAmount(
+                          (
+                            solBalance *
+                            (poolUsdtReserve / poolSolReserve)
+                          ).toFixed(6)
+                        );
+                      }
+                    }
+                  }}
+                >
+                  {solBalance !== null && `Bal: ${solBalance.toFixed(4)}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-4">
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={liquiditySolAmount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setLiquiditySolAmount(val);
+                    if (
+                      val &&
+                      poolSolReserve &&
+                      poolUsdtReserve &&
+                      poolSolReserve > 0
+                    ) {
+                      setLiquidityUsdtAmount(
+                        (
+                          parseFloat(val) *
+                          (poolUsdtReserve / poolSolReserve)
+                        ).toFixed(6)
+                      );
+                    } else if (!val) {
+                      setLiquidityUsdtAmount("");
+                    }
+                  }}
+                  className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <div className="flex items-center gap-2 p-1.5 pr-4 bg-card rounded-full border border-border-low/50 shadow-sm w-[130px] shrink-0">
+                  {TOKENS.SOL.icon}
+                  <span className="font-bold">SOL</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Plus Icon */}
+            <div className="relative -my-5 z-10 flex justify-center">
+              <div className="bg-card border-[6px] border-card rounded-2xl p-0.5 shadow-xl">
+                <div className="bg-muted/5 p-2.5 rounded-xl text-primary border border-border-low/50">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Liquidity Bottom Section (USDT) */}
+            <div className="bg-muted/5 border border-transparent rounded-[24px] p-5 flex flex-col gap-3 hover:border-border-low/50 transition-all focus-within:bg-muted/10 focus-within:border-primary/10 group/input">
+              <div className="flex justify-between items-center text-sm font-bold text-muted uppercase tracking-tight">
+                <span>Amount of USDT</span>
+                <span
+                  className="text-foreground/70 text-xs cursor-pointer hover:text-primary transition-colors"
+                  onClick={() => {
+                    if (usdtBalance) {
+                      setLiquidityUsdtAmount(usdtBalance.toString());
+                      if (
+                        poolSolReserve &&
+                        poolUsdtReserve &&
+                        poolUsdtReserve > 0
+                      ) {
+                        setLiquiditySolAmount(
+                          (
+                            usdtBalance *
+                            (poolSolReserve / poolUsdtReserve)
+                          ).toFixed(9)
+                        );
+                      }
+                    }
+                  }}
+                >
+                  {usdtBalance !== null && `Bal: ${usdtBalance.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center gap-4">
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={liquidityUsdtAmount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setLiquidityUsdtAmount(val);
+                    if (
+                      val &&
+                      poolSolReserve &&
+                      poolUsdtReserve &&
+                      poolUsdtReserve > 0
+                    ) {
+                      setLiquiditySolAmount(
+                        (
+                          parseFloat(val) *
+                          (poolSolReserve / poolUsdtReserve)
+                        ).toFixed(9)
+                      );
+                    } else if (!val) {
+                      setLiquiditySolAmount("");
+                    }
+                  }}
+                  className="bg-transparent border-none text-4xl md:text-5xl font-bold outline-none w-full text-foreground placeholder:text-muted/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <div className="flex items-center gap-2 p-1.5 pr-4 bg-card rounded-full border border-border-low/50 shadow-sm w-[130px] shrink-0">
+                  {TOKENS.USDT.icon}
+                  <span className="font-bold">USDT</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Info Rows */}
         <div className="px-2 py-1 flex flex-col gap-2 mt-2">
@@ -473,8 +648,14 @@ export default function DexterCard() {
 
         {/* Main Action Button */}
         <button
-          onClick={handleSwap}
-          disabled={!wallet || isLoading || !sellAmount}
+          onClick={activeTab === "swap" ? handleSwap : () => {}}
+          disabled={
+            !wallet ||
+            isLoading ||
+            (activeTab === "swap"
+              ? !sellAmount
+              : !liquiditySolAmount || !liquidityUsdtAmount)
+          }
           className="w-full relative mt-10 group/btn overflow-hidden rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-[#ff4d9e] to-primary animate-premium-gradient group-hover/btn:brightness-110 transition-all duration-700"></div>
@@ -483,10 +664,16 @@ export default function DexterCard() {
               <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : !wallet ? (
               "Connect Wallet"
-            ) : !sellAmount ? (
+            ) : activeTab === "swap" ? (
+              !sellAmount ? (
+                "Enter Amount"
+              ) : (
+                "Swap Tokens"
+              )
+            ) : !liquiditySolAmount ? (
               "Enter Amount"
             ) : (
-              "Swap Tokens"
+              "Add Liquidity"
             )}
           </div>
         </button>
