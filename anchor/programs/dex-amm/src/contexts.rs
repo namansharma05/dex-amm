@@ -1,8 +1,6 @@
+use crate::blueprints::SolVault;
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-
-#[account]
-pub struct SolVault {}
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -10,7 +8,7 @@ pub struct Initialize<'info> {
     pub signer: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = signer,
         mint::authority = mint_b,
         mint::decimals = 9,
@@ -22,16 +20,16 @@ pub struct Initialize<'info> {
     pub mint_b: InterfaceAccount<'info, Mint>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = signer,
-        space = 8,
+        space = 8 + 1,
         seeds = [b"sol_vault"],
         bump,
     )]
     pub sol_vault_account: Account<'info, SolVault>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = signer,
         token::mint = mint_b,
         token::authority = usdt_vault_account,

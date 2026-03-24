@@ -16,7 +16,12 @@ pub mod dexter {
 
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, amount_sol: u64) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        if ctx.accounts.sol_vault_account.initialized {
+            msg!("Pool already initialized");
+            return Ok(());
+        }
+
         let signer_seeds_mint_b: &[&[&[u8]]] = &[&[b"mint_b", &[ctx.bumps.mint_b]]];
 
         let cpi_program_id = ctx.accounts.token_program.to_account_info();
@@ -45,10 +50,10 @@ pub mod dexter {
                 to: ctx.accounts.sol_vault_account.to_account_info(),
             },
         );
-        require!(amount_sol > 0, errors::DexError::InvalidAmount);
-        anchor_lang::system_program::transfer(cpi_context_system, amount_sol)?;
+        anchor_lang::system_program::transfer(cpi_context_system, 1000)?;
 
-        msg!("sol deposited to pool: {}", amount_sol);
+        msg!("sol deposited to pool: {}", 1000);
+        ctx.accounts.sol_vault_account.initialized = true;
         Ok(())
     }
 

@@ -1,59 +1,12 @@
 "use client";
 
-import { createWalletTransactionSigner } from "@solana/client";
-import { useSendTransaction, useWalletConnection } from "@solana/react-hooks";
-import { getInitializeInstructionAsync } from "../generated/dexter/instructions/initialize";
-import {
-  createTransactionMessage,
-  pipe,
-  signTransactionMessageWithSigners,
-  createSolanaRpc,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  appendTransactionMessageInstruction,
-  sendTransactionWithoutConfirmingFactory,
-} from "@solana/kit";
-import { useState } from "react";
+import { useWalletConnection } from "@solana/react-hooks";
 
 export default function WalletCard() {
   const { connectors, connect, disconnect, wallet, status } =
     useWalletConnection();
-  const [isInitializing, setIsInitializing] = useState(false);
 
   const address = wallet?.account.address.toString();
-
-  const handleInitializeLP = async () => {
-    if (!wallet) return;
-    setIsInitializing(true);
-    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC;
-    const rpc = createSolanaRpc(rpcUrl as any);
-    try {
-      const { signer } = createWalletTransactionSigner(wallet);
-      const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
-      const instruction = await getInitializeInstructionAsync({
-        signer,
-        amountSol: 1000000000n, // 1 Native SOL
-      });
-      let transactionMessage = pipe(
-        createTransactionMessage({ version: "legacy" }),
-        (tx) => setTransactionMessageFeePayer(signer.address, tx),
-        (tx) =>
-          setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-        (tx) => appendTransactionMessageInstruction(instruction, tx)
-      );
-      const transactionSign =
-        await signTransactionMessageWithSigners(transactionMessage);
-
-      await sendTransactionWithoutConfirmingFactory({ rpc })(transactionSign, {
-        commitment: "confirmed",
-      });
-      console.log("LP initialized");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
 
   return (
     <section className="w-full max-w-3xl bg-card border border-border-low rounded-[32px] shadow-[0_32px_80px_-32px_rgba(0,0,0,0.1)] overflow-hidden transition-all hover:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.15)] group relative">
@@ -162,20 +115,6 @@ export default function WalletCard() {
               className="px-6 py-3 rounded-2xl font-bold text-sm text-muted hover:text-foreground hover:bg-muted/10 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer"
             >
               Disconnect
-            </button>
-            <button
-              onClick={handleInitializeLP}
-              disabled={status !== "connected" || isInitializing}
-              className="relative px-8 py-3 rounded-2xl font-bold text-sm bg-card border border-border-low shadow-sm hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
-            >
-              <span className={isInitializing ? "opacity-0" : "relative z-10"}>
-                Initialize LP
-              </span>
-              {isInitializing && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                </div>
-              )}
             </button>
           </div>
         </div>

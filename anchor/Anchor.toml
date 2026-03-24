@@ -7,6 +7,9 @@ skip-lint = false
 [programs.devnet]
 dexter = "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2"
 
+[programs.localnet]
+dexter = "7FqhXgUYkqLWCwMGv3R9tNd149oXwy9FqzS8d8HpU3W2"
+
 [registry]
 url = "https://api.apr.dev"
 
@@ -15,4 +18,4 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test"
+test = "cargo test --test amm_test --manifest-path programs/dex-amm/Cargo.toml"

@@ -12,8 +12,28 @@ action "deploy_dexter" "svm::deploy_program" {
     program = svm::get_program_from_anchor_project("dexter") 
     authority = signer.authority
     payer = signer.payer
-    // Optional: if you want to deploy the program via a cheatcode when targeting a Surfnet, set `instant_surfnet_deployment = true`
-    // Deploying via a cheatcode will write the program data directly to the program account, rather than sending transactions.
-    // This will make deployments instantaneous, but is deviating from how the deployments will take place on devnet/mainnet.
-    // instant_surfnet_deployment = true
+}
+
+action "initialize_dexter_pool" "svm::process_instructions" {
+    description = "Initialize the pool at program deployment"
+    
+    variable "program_id" { value = svm::get_program_id_from_anchor_project("dexter") }
+    variable "idl" { value = svm::get_idl_from_anchor_project("dexter") }
+
+    instructions = [
+        svm::create_instruction_from_idl(
+            var.idl,
+            "initialize",
+            {
+                signer = signer.payer.address
+                mint_b = svm::derive_pda(var.program_id, [ "mint_b" ])
+                sol_vault_account = svm::derive_pda(var.program_id, [ "sol_vault" ])
+                usdt_vault_account = svm::derive_pda(var.program_id, [ "usdt_token" ])
+                token_program = "TokenzQdBNbLqP5VEhdkTh9BB24GEhAFrvME6BC79" # Token-2022 as per tests
+                system_program = "11111111111111111111111111111111"
+            },
+            {}
+        )
+    ]
+    signers = [signer.payer]
 }
